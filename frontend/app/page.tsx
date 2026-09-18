@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import Image from "next/image";
 
 export default function Home() {
@@ -66,4 +67,10 @@ export default function Home() {
       </main>
     </div>
   );
+=======
+import { redirect } from "next/navigation";
+
+export default function Home() {
+  redirect("/search");
+>>>>>>> Stashed changes
 }
