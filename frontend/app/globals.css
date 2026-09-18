@@ -1,10 +1,26 @@
 @import "tailwindcss";
 
-:root { --background: #f1f5f9; --foreground: #0f172a; }
-* { box-sizing: border-box; }
-body { background: var(--background); color: var(--foreground); font-family: Arial, Helvetica, sans-serif; }
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
 
-/* Shared form styling keeps the search controls readable and consistent. */
-.field-label { display: grid; gap: 0.4rem; color: #334155; font-size: 0.875rem; font-weight: 600; }
-.field-label input, .field-label select { width: 100%; border: 1px solid #cbd5e1; border-radius: 0.5rem; background: white; padding: 0.7rem 0.75rem; color: #0f172a; font: inherit; }
-.field-label input:focus, .field-label select:focus { border-color: #2563eb; outline: 2px solid #bfdbfe; outline-offset: 1px; }
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
