@@ -179,3 +179,39 @@ class PublicSeekerSerializer(serializers.ModelSerializer):
             return None
         current = profile.experience.filter(end_date__isnull=True).first()
         return current.company_name if current else None
+
+
+class SavedSearchSerializer(serializers.ModelSerializer):
+    """A stored sourcing query with its alert toggle.
+
+    newCount is derived on read, not stored, so it cannot drift out of sync with
+    the underlying profiles. It counts candidates matching the saved filters who
+    joined since the recruiter last opened this search.
+    """
+
+    alertsOn = serializers.BooleanField(source="alerts_on", required=False)
+    newCount = serializers.SerializerMethodField()
+    lastViewedAt = serializers.DateTimeField(source="last_viewed_at", read_only=True)
+
+    class Meta:
+        from jobs.models import SavedSearch
+
+        model = SavedSearch
+        fields = ["id", "name", "filters", "alertsOn", "newCount", "lastViewedAt"]
+
+    def get_newCount(self, search):
+        if not search.last_viewed_at:
+            return 0
+
+        candidates = SeekerProfile.objects.filter(
+            open_to_work=True,
+            user__date_joined__gt=search.last_viewed_at,
+        )
+        for skill in (search.filters or {}).get("skills", []):
+            candidates = candidates.filter(skills__name__iexact=skill)
+
+        location = (search.filters or {}).get("location")
+        if location:
+            candidates = candidates.filter(location__icontains=location)
+
+        return candidates.distinct().count()

@@ -30,6 +30,8 @@ urlpatterns = [
     path('api/jobs/', include('jobs.urls')),
     path('api/', include('applications.urls')),
     path('api/', include('profiles.urls')),
+    path('api/', include('messaging.urls')),
+    path('api/recruiter/', include('jobs.recruiter_urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
