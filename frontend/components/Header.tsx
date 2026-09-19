@@ -28,12 +28,12 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-40 bg-ground/92 backdrop-blur-[10px] border-b border-line">
       <div className="max-w-[1320px] mx-auto px-7 py-3.5 flex flex-wrap items-center gap-x-7 gap-y-3">
-        <div className="flex items-center gap-2.5 shrink-0">
+        <Link href="/" className="flex items-center gap-2.5 shrink-0 text-ink no-underline hover:text-ink hover:no-underline">
           <div className="w-[22px] h-[22px] rounded-md bg-ink grid place-items-center">
             <div className="w-2 h-2 rounded-sm bg-ground" />
           </div>
           <span className="text-[17px] font-semibold tracking-[-0.02em]">Roster</span>
-        </div>
+        </Link>
 
         <nav className="flex flex-wrap gap-1 flex-1 min-w-0">
           {tabs.map((tab) => {
