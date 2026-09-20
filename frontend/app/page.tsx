@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import Card from "@/components/ui/Card";
-import { jobs, skillFilterOptions } from "@/lib/mockData";
+import { skillFilterOptions } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Roster | Where skills meet openings",
@@ -10,15 +10,33 @@ export const metadata: Metadata = {
     "Roster is a job marketplace built around what you can actually do. Search roles by skill, salary and distance, shortlist before you apply, and track every application in one place.",
 };
 
-const remoteCount = jobs.filter((j) => j.setup === "Remote").length;
-const visaCount = jobs.filter((j) => j.visa).length;
+// Rendered on the server, so it talks to the API directly rather than through
+// the browser client. If the backend is down the numbers are simply left out
+// instead of failing the whole landing page.
+const API_ORIGIN = process.env.API_URL ?? "http://127.0.0.1:8000";
 
-const stats = [
-  { value: `${jobs.length}`, label: "Open roles listed" },
-  { value: `${remoteCount}`, label: "Fully remote" },
-  { value: `${visaCount}`, label: "Offer visa sponsorship" },
-  { value: `${skillFilterOptions.length}`, label: "Skill filters" },
-];
+async function countJobs(query: string): Promise<number> {
+  const response = await fetch(`${API_ORIGIN}/api/jobs/?${query}`, {
+    cache: "no-store",
+    signal: AbortSignal.timeout(2500),
+  });
+  if (!response.ok) throw new Error(`jobs count failed: ${response.status}`);
+  return (await response.json()).count as number;
+}
+
+async function loadStats() {
+  try {
+    const [open, remote, visa] = await Promise.all([countJobs(""), countJobs("setup=remote"), countJobs("visa=true")]);
+    return [
+      { value: `${open}`, label: "Open roles listed" },
+      { value: `${remote}`, label: "Fully remote" },
+      { value: `${visa}`, label: "Offer visa sponsorship" },
+      { value: `${skillFilterOptions.length}`, label: "Skill filters" },
+    ];
+  } catch {
+    return null;
+  }
+}
 
 const seekerSteps = [
   {
@@ -117,7 +135,9 @@ function StepList({ steps }: { steps: { title: string; body: string }[] }) {
   );
 }
 
-export default function Home() {
+export default async function Home() {
+  const stats = await loadStats();
+  const openRoles = stats?.[0].value;
   return (
     <div className="flex flex-col gap-[72px] pb-4">
       {/* Hero */}
@@ -140,14 +160,16 @@ export default function Home() {
           </Link>
         </div>
 
-        <dl className="m-0 mt-10 pt-7 border-t border-line grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
-          {stats.map((stat) => (
-            <div key={stat.label} className="flex flex-col">
-              <dt className="order-2 mt-2 text-[13px] text-muted-2">{stat.label}</dt>
-              <dd className="order-1 m-0 text-[28px] font-semibold tracking-[-0.03em] leading-none">{stat.value}</dd>
-            </div>
-          ))}
-        </dl>
+        {stats && (
+          <dl className="m-0 mt-10 pt-7 border-t border-line grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
+            {stats.map((stat) => (
+              <div key={stat.label} className="flex flex-col">
+                <dt className="order-2 mt-2 text-[13px] text-muted-2">{stat.label}</dt>
+                <dd className="order-1 m-0 text-[28px] font-semibold tracking-[-0.03em] leading-none">{stat.value}</dd>
+              </div>
+            ))}
+          </dl>
+        )}
       </section>
 
       {/* What this is */}
@@ -232,7 +254,7 @@ export default function Home() {
 
       {/* Closing */}
       <section className="rounded-xl border border-line bg-surface-sunken px-7 py-10 text-center">
-        <h2 className="m-0 text-[24px] font-semibold tracking-[-0.025em]">{jobs.length} roles are open right now</h2>
+        <h2 className="m-0 text-[24px] font-semibold tracking-[-0.025em]">{openRoles ? `${openRoles} roles are open right now` : "Roles are open right now"}</h2>
         <p className="mt-3 mb-0 mx-auto max-w-[480px] text-[15px] leading-[1.65] text-muted">
           Set your filters once and see which of them match your skills, your range and your commute.
         </p>

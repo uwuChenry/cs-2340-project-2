@@ -1,22 +1,29 @@
 "use client";
 
-import type { Job, ViewMode } from "@/lib/types";
+import { useState } from "react";
+import Link from "next/link";
+import { http, messageOf } from "@/lib/api";
+import type { ApiJob, ApiPage } from "@/lib/apiTypes";
+import { toJob } from "@/lib/adapters";
+import type { Filters, Job, ViewMode } from "@/lib/types";
 import {
+  RECOMMENDATION_THRESHOLD,
   distanceLabel,
-  filterJobs,
-  isRecommended,
   salaryLabel,
   setupLabel,
-  skillMatchPct,
   sortByRecommended,
 } from "@/lib/derive";
-import { jobs, mySkills, skillFilterOptions } from "@/lib/mockData";
+import { skillFilterOptions } from "@/lib/constants";
+import { useAsync } from "@/lib/useAsync";
+import { useDebounced } from "@/lib/useDebounced";
 import { useAppState } from "@/state/AppState";
+import { useAuth } from "@/state/AuthState";
 import { CompanyMark } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import Chip from "@/components/ui/Chip";
 import { Label, RangeInput, TextInput } from "@/components/ui/Field";
+import Notice from "@/components/ui/Notice";
 import { JobsMapPanel } from "@/components/SchematicMap";
 
 const viewModes: { id: ViewMode; label: string }[] = [
@@ -31,13 +38,65 @@ const setupOptions: { id: "any" | "remote" | "onsite"; label: string }[] = [
   { id: "onsite", label: "Onsite" },
 ];
 
-export default function SearchPage() {
-  const { view, setView, filters, setFilter, toggleSkillFilter, resetFilters, cart, toggleCart, applied, applyJob, openJob } =
-    useAppState();
+// The filter panel keeps salary in thousands; the API filters in whole dollars.
+function toQuery(f: Filters) {
+  return {
+    q: f.q.trim(),
+    location: f.loc.trim(),
+    skills: f.skills.join(","),
+    setup: f.setup,
+    min_salary: f.minSalary * 1000,
+    visa: f.visa ? "true" : undefined,
+    radius: f.radius,
+  };
+}
 
-  const filtered = filterJobs(jobs, filters);
-  const sorted = sortByRecommended(filtered);
-  const recommendedCount = sorted.filter((j) => isRecommended(skillMatchPct(j.skills))).length;
+export default function SearchPage() {
+  const { view, setView, filters, setFilter, toggleSkillFilter, resetFilters, cart, toggleCart, applied, applyJob, openJob, mySkills } =
+    useAppState();
+  const { user } = useAuth();
+
+  // Slider and text changes are debounced so dragging does not fire a request per step.
+  const query = useDebounced(filters, 300);
+  const queryKey = JSON.stringify(query);
+
+  const first = useAsync(
+    () => http.get<ApiPage<ApiJob>>("/api/jobs/", toQuery(query)),
+    [queryKey, user?.id ?? null],
+  );
+
+  // Pages after the first are appended, and only count while they belong to the
+  // current query: changing a filter makes `more` stale, so it is ignored.
+  const [more, setMore] = useState<{ key: string; jobs: Job[]; page: number; hasMore: boolean } | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [moreError, setMoreError] = useState<string | null>(null);
+  const extra = more?.key === queryKey ? more : null;
+
+  const jobs: Job[] = [...(first.data?.results.map(toJob) ?? []), ...(extra?.jobs ?? [])];
+  const totalCount = first.data?.count ?? 0;
+  const hasMore = extra ? extra.hasMore : !!first.data?.next;
+
+  async function loadMore() {
+    const page = extra ? extra.page + 1 : 2;
+    setLoadingMore(true);
+    setMoreError(null);
+    try {
+      const data = await http.get<ApiPage<ApiJob>>("/api/jobs/", { ...toQuery(query), page });
+      setMore({
+        key: queryKey,
+        jobs: [...(extra?.jobs ?? []), ...data.results.map(toJob)],
+        page,
+        hasMore: !!data.next,
+      });
+    } catch (e) {
+      setMoreError(messageOf(e));
+    } finally {
+      setLoadingMore(false);
+    }
+  }
+
+  const sorted = sortByRecommended(jobs);
+  const recommendedCount = sorted.filter((j) => j.recommended).length;
   const hasRecs = recommendedCount > 0;
 
   const showList = view !== "map";
@@ -48,7 +107,9 @@ export default function SearchPage() {
       <div className="flex items-end justify-between gap-5 mb-[18px] flex-wrap">
         <div>
           <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Find work</div>
-          <h1 className="m-0 text-[30px] font-semibold tracking-[-0.025em]">{filtered.length} roles match your filters</h1>
+          <h1 className="m-0 text-[30px] font-semibold tracking-[-0.025em]">
+            {first.data ? `${totalCount} ${totalCount === 1 ? "role matches" : "roles match"} your filters` : "Finding roles…"}
+          </h1>
         </div>
         <div className="flex gap-[3px] p-[3px] bg-hover-fill rounded-[9px]">
           {viewModes.map((m) => (
@@ -163,6 +224,15 @@ export default function SearchPage() {
 
         {showList && (
           <div className="flex-[3_1_380px] min-w-0 flex flex-col gap-2.5">
+            {!user && (
+              <Notice>
+                <Link href="/login?next=/search">Sign in</Link> to see how each role matches your skills and how far it is
+                from you.
+              </Notice>
+            )}
+
+            {first.error && <Notice tone="error">{first.error}</Notice>}
+
             {hasRecs && (
               <div className="bg-accent-tint-2 border border-accent-border-2 rounded-xl px-4 py-3.5">
                 <div className="flex items-center gap-2 mb-1">
@@ -170,11 +240,14 @@ export default function SearchPage() {
                   <span className="text-[13px] font-semibold text-accent-deep">Recommended from your skills</span>
                 </div>
                 <p className="m-0 text-[13px] text-accent-text leading-[1.5]">
-                  Based on {mySkills.slice(0, 3).join(", ")} and your saved roles, {recommendedCount} of these clear
-                  every skill you listed.
+                  Based on {mySkills.slice(0, 3).join(", ")}
+                  {mySkills.length > 3 ? " and more" : ""}, {recommendedCount} of these match at least{" "}
+                  {RECOMMENDATION_THRESHOLD}% of the skills they ask for.
                 </p>
               </div>
             )}
+
+            {first.data && jobs.length === 0 && <Notice>No roles match these filters. Try widening the radius or clearing a skill.</Notice>}
 
             {sorted.map((job) => (
               <JobCard
@@ -182,17 +255,26 @@ export default function SearchPage() {
                 job={job}
                 inCart={cart.includes(job.id)}
                 isApplied={!!applied[job.id]}
-                onToggleCart={() => toggleCart(job.id)}
+                onToggleCart={() => toggleCart(job)}
                 onApply={() => applyJob(job.id)}
                 onOpen={() => openJob(job.id)}
               />
             ))}
+
+            {hasMore && (
+              <div className="flex flex-col items-center gap-2 pt-1">
+                <Button variant="secondary" size="md" onClick={loadMore} disabled={loadingMore}>
+                  {loadingMore ? "Loading…" : "Show more roles"}
+                </Button>
+                {moreError && <span className="text-[12.5px] text-danger">{moreError}</span>}
+              </div>
+            )}
           </div>
         )}
 
         {showMap && (
           <div className="flex-[2_1_340px] min-w-0">
-            <JobsMapPanel jobs={filtered} radius={filters.radius} onPinClick={(id) => openJob(id)} />
+            <JobsMapPanel jobs={jobs} radius={filters.radius} onPinClick={(id) => openJob(id)} />
           </div>
         )}
       </div>
@@ -215,8 +297,8 @@ function JobCard({
   onApply: () => void;
   onOpen: () => void;
 }) {
-  const pct = skillMatchPct(job.skills);
-  const isRec = isRecommended(pct);
+  const pct = job.matchPct;
+  const isRec = job.recommended;
 
   return (
     <article

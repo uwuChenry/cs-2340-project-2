@@ -38,3 +38,13 @@ export function RangeInput(props: InputHTMLAttributes<HTMLInputElement>) {
   const { className = "", ...rest } = props;
   return <input type="range" className={`w-full accent-accent ${className}`} {...rest} />;
 }
+
+// A validation message under the input it belongs to.
+export function FieldError({ messages }: { messages?: string[] }) {
+  if (!messages?.length) return null;
+  return (
+    <p role="alert" className="m-0 mt-1.5 text-[12.5px] leading-[1.4] text-danger">
+      {messages.join(" ")}
+    </p>
+  );
+}

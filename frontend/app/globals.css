@@ -38,6 +38,10 @@
   --color-success-bg: #EEF6F1;
   --color-success-border: #CFE6DA;
 
+  --color-danger: #A32A1F;
+  --color-danger-bg: #FBF0EE;
+  --color-danger-border: #EBCFCB;
+
   --color-tag-fill: #F3F1EB;
   --color-scrim: rgba(26, 25, 23, 0.32);
 
@@ -62,21 +66,26 @@ body {
   font-family: var(--font-sans);
 }
 
-a {
-  color: var(--color-accent);
-  text-decoration: none;
-}
-a:hover {
-  color: var(--color-accent-deep);
-  text-decoration: underline;
-}
+/* These live in the base layer so Tailwind utilities can override them. Unlayered
+   rules always beat @layer utilities, which made `text-ground` on primary buttons
+   and `text-muted` on nav links lose to `color: inherit` / the link colour. */
+@layer base {
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-accent-deep);
+    text-decoration: underline;
+  }
 
-input,
-select,
-textarea,
-button {
-  font: inherit;
-  color: inherit;
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
 }
 
 ::placeholder {

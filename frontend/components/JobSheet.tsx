@@ -1,11 +1,17 @@
 "use client";
 
+import { http } from "@/lib/api";
+import type { ApiJob } from "@/lib/apiTypes";
+import { toJob } from "@/lib/adapters";
+import { notePrompts } from "@/lib/constants";
 import { distanceLabel, salaryLabel, setupLabel } from "@/lib/derive";
-import { jobs, mySkills, notePrompts } from "@/lib/mockData";
+import { useAsync } from "@/lib/useAsync";
 import { useAppState } from "@/state/AppState";
+import { useAuth } from "@/state/AuthState";
 import { CompanyMark } from "./ui/Avatar";
 import Button from "./ui/Button";
 import Chip from "./ui/Chip";
+import Notice from "./ui/Notice";
 import Sheet, { SheetCloseButton } from "./ui/Sheet";
 import { SingleLocationMap } from "./SchematicMap";
 
@@ -24,18 +30,43 @@ export default function JobSheet() {
     cancelNote,
     submitNote,
   } = useAppState();
+  const { user } = useAuth();
 
-  const job = openJobId ? jobs.find((j) => j.id === openJobId) : null;
-  if (!job) return null;
+  // The list view already has most of this, but the sheet needs the fields only
+  // the detail endpoint returns (which required skills the seeker has).
+  const detail = useAsync(
+    () => http.get<ApiJob>(`/api/jobs/${openJobId}/`),
+    [openJobId, user?.id ?? null],
+    openJobId !== null,
+  );
 
+  if (!openJobId) return null;
+
+  const loaded = detail.data && String(detail.data.id) === openJobId ? toJob(detail.data) : null;
+
+  if (!loaded) {
+    return (
+      <Sheet onClose={closeJob} width={620}>
+        <div className="p-7 flex justify-between gap-4 items-start">
+          <div className="min-w-0">
+            {detail.error ? <Notice tone="error">{detail.error}</Notice> : <p className="m-0 text-[14px] text-muted">Loading role…</p>}
+          </div>
+          <SheetCloseButton onClick={closeJob} />
+        </div>
+      </Sheet>
+    );
+  }
+
+  const job = loaded;
   const isApplied = !!applied[job.id];
   const inCart = cart.includes(job.id);
+  const matched = job.matchedSkills ?? [];
 
   const facts = [
-    { label: "Level", value: "Senior · IC4" },
-    { label: "Team size", value: "6 engineers" },
+    { label: "Level", value: job.level || "Not specified" },
+    { label: "Team size", value: job.teamSize || "Not specified" },
     { label: "Visa sponsorship", value: job.visa ? "Available" : "Not offered" },
-    { label: "Hiring since", value: job.posted },
+    { label: "Posted", value: job.posted },
   ];
 
   return (
@@ -71,7 +102,7 @@ export default function JobSheet() {
             variant={inCart ? "accent" : "secondary"}
             size="md"
             className={`!rounded-[9px] ${inCart ? "!bg-accent-tint !text-accent !border !border-accent-border" : ""}`}
-            onClick={() => toggleCart(job.id)}
+            onClick={() => toggleCart(job)}
           >
             {inCart ? "In shortlist" : "Add to shortlist"}
           </Button>
@@ -131,7 +162,7 @@ export default function JobSheet() {
         <h3 className="m-0 mb-[9px] text-sm font-semibold">Skills they listed</h3>
         <div className="flex flex-wrap gap-1.5 mb-[22px]">
           {job.skills.map((s) => {
-            const hit = mySkills.includes(s);
+            const hit = matched.includes(s);
             return (
               <span
                 key={s}

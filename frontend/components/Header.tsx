@@ -2,28 +2,52 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { SEEKER_INITIALS } from "@/lib/mockData";
+import { messageOf } from "@/lib/api";
 import { useAppState } from "@/state/AppState";
+import { useAuth } from "@/state/AuthState";
+import UserMenu from "./UserMenu";
 
-const seekerTabs = [
-  { href: "/search", label: "Search" },
+type Tab = { href: string; label: string };
+
+const searchTab: Tab = { href: "/search", label: "Search" };
+
+const seekerTabs: Tab[] = [
+  searchTab,
   { href: "/shortlist", label: "Shortlist" },
   { href: "/applications", label: "Applications" },
-  { href: "/profile", label: "Profile" },
 ];
 
-const recruiterTabs = [
+const recruiterTabs: Tab[] = [
   { href: "/recruiter/pipeline", label: "Pipeline" },
   { href: "/recruiter/candidates", label: "Candidates" },
   { href: "/recruiter/post", label: "Post a role" },
 ];
 
+// Pages a visitor can be on without being signed in. After signing in from one of
+// these they should land on their own home, not be sent back to the landing page.
+const publicPaths = ["/", "/search", "/login", "/signup"];
+
 export default function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { cart } = useAppState();
-  const role = pathname.startsWith("/recruiter") ? "recruiter" : "seeker";
-  const tabs = role === "seeker" ? seekerTabs : recruiterTabs;
+  const { cart, showToast } = useAppState();
+  const { user, ready, logout } = useAuth();
+
+  // Signed-out visitors (and anyone while the session is still being checked) see
+  // only search. The rest of the tabs belong to a signed-in role, and profile and
+  // account links live in the avatar menu.
+  const tabs = !ready || !user ? [searchTab] : user.role === "recruiter" ? recruiterTabs : user.role === "job_seeker" ? seekerTabs : [searchTab];
+
+  async function signOut() {
+    try {
+      await logout();
+      router.push("/");
+    } catch (e) {
+      showToast(messageOf(e));
+    }
+  }
+
+  const loginHref = publicPaths.includes(pathname) ? "/login" : `/login?next=${encodeURIComponent(pathname)}`;
 
   return (
     <header className="sticky top-0 z-40 bg-ground/92 backdrop-blur-[10px] border-b border-line">
@@ -53,28 +77,24 @@ export default function Header() {
           })}
         </nav>
 
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="flex p-[3px] bg-hover-fill rounded-[9px]">
-            <button
-              onClick={() => router.push("/search")}
-              className={`px-[11px] py-[5px] rounded-[7px] text-[13px] font-medium cursor-pointer border-0 ${
-                role === "seeker" ? "bg-surface text-ink" : "bg-transparent text-muted"
-              }`}
-            >
-              Job seeker
-            </button>
-            <button
-              onClick={() => router.push("/recruiter/pipeline")}
-              className={`px-[11px] py-[5px] rounded-[7px] text-[13px] font-medium cursor-pointer border-0 ${
-                role === "recruiter" ? "bg-surface text-ink" : "bg-transparent text-muted"
-              }`}
-            >
-              Recruiter
-            </button>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-accent-tint-3 border border-accent-border-3 grid place-items-center text-xs font-semibold text-accent">
-            {SEEKER_INITIALS}
-          </div>
+        <div className="flex items-center gap-3 shrink-0 min-h-[34px]">
+          {ready && user && <UserMenu user={user} onSignOut={signOut} />}
+          {ready && !user && (
+            <>
+              <Link
+                href={loginHref}
+                className="px-3 py-[7px] rounded-lg text-[13px] font-medium no-underline hover:no-underline text-ink hover:bg-hover-fill"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="px-3 py-[7px] rounded-lg text-[13px] font-medium no-underline hover:no-underline bg-ink text-ground hover:bg-ink-2"
+              >
+                Sign up
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { distanceLabel, salaryLabel, setupLabel, skillMatchPct } from "@/lib/derive";
-import { jobs } from "@/lib/mockData";
+import { distanceLabel, salaryLabel, setupLabel } from "@/lib/derive";
 import { useAppState } from "@/state/AppState";
+import Guard from "@/components/Guard";
 import { CompanyMark } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
@@ -11,10 +11,17 @@ import Card from "@/components/ui/Card";
 type CompareCell = { text: string; strong?: boolean };
 
 export default function ShortlistPage() {
-  const router = useRouter();
-  const { cart, toggleCart, clearCart, applyAll } = useAppState();
+  return (
+    <Guard role="job_seeker">
+      <Shortlist />
+    </Guard>
+  );
+}
 
-  const cartItems = cart.map((id) => jobs.find((j) => j.id === id)).filter((j): j is NonNullable<typeof j> => !!j);
+function Shortlist() {
+  const router = useRouter();
+  const { shortlist: cartItems, seekerReady, toggleCart, clearCart, applyAll } = useAppState();
+
   const isEmpty = cartItems.length === 0;
 
   const rows: { label: string; cells: CompareCell[] }[] = [
@@ -23,7 +30,7 @@ export default function ShortlistPage() {
     { label: "Work setup", cells: cartItems.map((c) => ({ text: setupLabel(c) })) },
     { label: "Distance", cells: cartItems.map((c) => ({ text: distanceLabel(c) })) },
     { label: "Visa sponsorship", cells: cartItems.map((c) => ({ text: c.visa ? "Yes" : "Not offered" })) },
-    { label: "Skill match", cells: cartItems.map((c) => ({ text: `${skillMatchPct(c.skills)}% match`, strong: true })) },
+    { label: "Skill match", cells: cartItems.map((c) => ({ text: `${c.matchPct}% match`, strong: true })) },
     { label: "Posted", cells: cartItems.map((c) => ({ text: c.posted })) },
   ];
 
@@ -36,7 +43,9 @@ export default function ShortlistPage() {
         one pass.
       </p>
 
-      {isEmpty ? (
+      {!seekerReady ? (
+        <p className="text-[14px] text-muted">Loading your shortlist…</p>
+      ) : isEmpty ? (
         <Card className="border-dashed border-line-strong text-center" padding="none">
           <div className="py-[46px] px-[46px]">
             <p className="m-0 mb-3.5 text-[15px] text-muted">Nothing saved yet.</p>
@@ -61,7 +70,7 @@ export default function ShortlistPage() {
                   </div>
                   <div className="text-[15px] font-semibold tracking-[-0.01em] leading-[1.3]">{c.title}</div>
                   <button
-                    onClick={() => toggleCart(c.id)}
+                    onClick={() => toggleCart(c)}
                     className="mt-2.5 border-0 bg-transparent p-0 text-[12.5px] text-muted-2 underline cursor-pointer"
                   >
                     Remove
@@ -93,9 +102,8 @@ export default function ShortlistPage() {
             <Button
               variant="primary"
               size="md"
-              onClick={() => {
-                applyAll(cartItems.map((c) => c.id));
-                router.push("/applications");
+              onClick={async () => {
+                if (await applyAll(cartItems.map((c) => c.id))) router.push("/applications");
               }}
             >
               Apply to all {cartItems.length}

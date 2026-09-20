@@ -8,34 +8,87 @@ export type Job = {
   logoBg: string;
   location: string;
   setup: WorkSetup;
-  salaryLow: number;
-  salaryHigh: number;
-  distanceMi: number;
+  // Salary in thousands of dollars, which is how the UI prints it. Null when the
+  // posting does not list a range.
+  salaryLow: number | null;
+  salaryHigh: number | null;
+  // Null when the seeker or the posting has no coordinates; 0 means remote.
+  distanceMi: number | null;
   visa: boolean;
   posted: string;
-  mapLeft: number;
-  mapTop: number;
+  latitude: number | null;
+  longitude: number | null;
+  // Position on the schematic map, as percentages. Null for postings with no
+  // coordinates (remote roles), which simply get no pin.
+  mapLeft: number | null;
+  mapTop: number | null;
   address: string;
   skills: string[];
+  // Which of `skills` the seeker has. Only the detail endpoint returns this.
+  matchedSkills?: string[];
+  matchPct: number;
+  recommended: boolean;
+  level: string;
+  teamSize: string;
   about: string;
 };
 
 export const STAGES = ["Applied", "Review", "Interview", "Offer", "Closed"] as const;
 export type Stage = (typeof STAGES)[number];
 
-export type Candidate = {
+// The status values the API stores, in the same order as STAGES.
+export const STAGE_STATUSES = ["applied", "review", "interview", "offer", "closed"] as const;
+
+export type PipelineCard = {
   id: string;
   name: string;
+  initials: string;
+  role: string;
+  matchPct: number;
+  appliedAt: string;
+};
+
+export type ExperienceEntry = {
+  years: string;
+  role: string;
+  org: string;
+  detail: string;
+};
+
+// What the candidate sheet shows. It is built from either an application (the
+// recruiter opened a pipeline card) or a bare seeker (a sourcing result who has
+// not applied), so the application-only fields are optional.
+export type CandidateDetail = {
+  kind: "application" | "seeker";
+  id: string;
+  seekerId: string;
+  jobId: string | null;
+  name: string;
+  initials: string;
+  role: string;
+  location: string;
+  stageIndex: number | null;
+  appliedAgo: string | null;
+  note: string | null;
+  salaryExpectation: string;
+  noticePeriod: string;
+  email: string | null;
+  currentEmployer: string | null;
+  matchedSkills: string[];
+  missingSkills: string[];
+  skills: string[];
+  experience: ExperienceEntry[];
+};
+
+export type SourcedCandidate = {
+  seekerId: string;
+  name: string;
+  initials: string;
   role: string;
   location: string;
   matchPct: number;
   skills: string[];
-  note: string;
-  stage: Stage;
-  salaryExpectation: string;
-  noticePeriod: string;
-  appliedAgo: string;
-  experience: { years: string; role: string; org: string }[];
+  hasApplied: boolean;
 };
 
 export type ApplicationBase = {
@@ -52,6 +105,8 @@ export type SavedSearch = {
   id: string;
   name: string;
   newCount: number;
+  alertsOn: boolean;
+  filters: { skills?: string[]; location?: string; project?: string };
 };
 
 export type Cluster = {
@@ -81,3 +136,6 @@ export type PrivacySettings = {
 };
 
 export type ViewMode = "list" | "split" | "map";
+
+// A reference to whoever the recruiter has open in the candidate sheet.
+export type CandidateRef = { kind: "application" | "seeker"; id: string };

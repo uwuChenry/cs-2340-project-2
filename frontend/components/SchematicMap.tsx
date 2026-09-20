@@ -77,6 +77,8 @@ export function JobsMapPanel({
         />
 
         {jobs.map((job) => {
+          // Remote roles (and any posting without coordinates) have no place on the map.
+          if (job.mapLeft === null || job.mapTop === null) return null;
           const near = isNearby(job, radius);
           return (
             <button
@@ -93,7 +95,7 @@ export function JobsMapPanel({
                 boxShadow: "0 2px 6px rgba(26,25,23,0.12)",
               }}
             >
-              ${job.salaryLow}k
+              {job.salaryLow === null ? "—" : `$${job.salaryLow}k`}
             </button>
           );
         })}
@@ -103,6 +105,11 @@ export function JobsMapPanel({
           <div className="text-[15px] font-semibold">
             {jobs.filter((j) => isNearby(j, radius)).length} of {jobs.length} roles
           </div>
+          {jobs.some((j) => j.mapLeft === null) && (
+            <div className="text-[11.5px] text-muted-2 mt-0.5">
+              {jobs.filter((j) => j.mapLeft === null).length} remote or unpinned, not shown
+            </div>
+          )}
         </div>
       </MapBase>
     </div>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 import { AppStateProvider } from "@/state/AppState";
+import { AuthProvider } from "@/state/AuthState";
 import AppShell from "@/components/AppShell";
 
 const instrumentSans = Instrument_Sans({
@@ -28,9 +29,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${instrumentSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-ground text-ink">
-        <AppStateProvider>
-          <AppShell>{children}</AppShell>
-        </AppStateProvider>
+        <AuthProvider>
+          <AppStateProvider>
+            <AppShell>{children}</AppShell>
+          </AppStateProvider>
+        </AuthProvider>
       </body>
     </html>
   );
