@@ -7,6 +7,8 @@ from profiles import recruiter_views as profile_views
 from . import recruiter_views as job_views
 
 urlpatterns = [
+    path("profile/", profile_views.RecruiterProfileView.as_view(), name="recruiter-profile"),
+
     path("jobs/", job_views.RecruiterJobListView.as_view(), name="recruiter-job-list"),
     path("jobs/<int:pk>/", job_views.RecruiterJobDetailView.as_view(), name="recruiter-job-detail"),
     path("jobs/<int:pk>/pipeline/", job_views.PipelineView.as_view(), name="recruiter-pipeline"),

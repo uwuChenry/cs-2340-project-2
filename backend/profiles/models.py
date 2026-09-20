@@ -107,6 +107,10 @@ class SeekerProfile(models.Model):
     show_current_employer = models.BooleanField(default=True)
     open_to_work = models.BooleanField(default=True)
 
+    # Resized and re-encoded on upload (see profiles/photos.py), so what is stored
+    # is always a small square JPEG with no embedded metadata.
+    photo = models.ImageField(upload_to="avatars/", blank=True)
+
     updated_at = models.DateTimeField(auto_now=True)
 
     @property

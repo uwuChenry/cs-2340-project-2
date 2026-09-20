@@ -1,3 +1,6 @@
 # Next.js generated development assets
 /.next/
 /frontend/.next/dev/static/
+
+# User-uploaded profile photos are personal data; never commit them.
+/backend/media/avatars/

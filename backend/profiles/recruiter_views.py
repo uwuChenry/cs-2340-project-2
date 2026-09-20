@@ -13,7 +13,7 @@ from jobs.matching import haversine_miles, skill_match_pct
 
 from .models import SeekerProfile
 from .permissions import RecruiterContextMixin
-from .serializers import SavedSearchSerializer
+from .serializers import RecruiterProfileSerializer, SavedSearchSerializer
 
 
 class CandidateSearchView(RecruiterContextMixin, generics.ListAPIView):
@@ -196,3 +196,12 @@ class SavedSearchDetailView(RecruiterContextMixin, generics.RetrieveUpdateDestro
         search.last_viewed_at = timezone.now()
         search.save(update_fields=["last_viewed_at"])
         return Response(data)
+
+
+class RecruiterProfileView(RecruiterContextMixin, generics.RetrieveUpdateAPIView):
+    """GET and PATCH /api/recruiter/profile/ -- the recruiter's own account page."""
+
+    serializer_class = RecruiterProfileSerializer
+
+    def get_object(self):
+        return self.get_recruiter()

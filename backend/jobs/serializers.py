@@ -165,9 +165,6 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
 
     @staticmethod
     def _set_skills(job, skill_names):
-        from profiles.models import Skill
+        from profiles.skills import resolve_skills
 
-        job.skills.set(
-            Skill.objects.get_or_create(name=name.strip())[0]
-            for name in skill_names if name.strip()
-        )
+        job.skills.set(resolve_skills(skill_names))

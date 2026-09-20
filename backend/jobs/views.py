@@ -119,10 +119,14 @@ class JobListView(SeekerContextMixin, generics.ListAPIView):
         if seeker is None or seeker.latitude is None:
             return queryset
 
+        # A job whose distance can't be worked out (no coordinates yet) stays in.
+        # The radius exists to drop roles that are known to be too far; treating
+        # "unknown" as "too far" would hide every newly posted role from anyone
+        # who has pinned their location.
         limit = int(radius)
         within = [
             job.id for job in queryset
-            if (d := distance_miles(job, seeker)) is not None and d <= limit
+            if (d := distance_miles(job, seeker)) is None or d <= limit
         ]
         return queryset.filter(id__in=within)
 

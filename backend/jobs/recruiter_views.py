@@ -15,6 +15,7 @@ from applications.recruiter_serializers import (
 )
 from profiles.permissions import RecruiterContextMixin
 
+from .matching import coarse
 from .models import JobPosting
 from .serializers import RecruiterJobSerializer
 
@@ -147,8 +148,8 @@ class ApplicantClusterView(RecruiterContextMixin, APIView):
             key = seeker.location or "Unknown"
             bucket = buckets[key]
             bucket["count"] += 1
-            bucket["lat"] = float(seeker.latitude)
-            bucket["lng"] = float(seeker.longitude)
+            bucket["lat"] = coarse(seeker.latitude)
+            bucket["lng"] = coarse(seeker.longitude)
 
         points = [
             {"location": name, "count": b["count"],

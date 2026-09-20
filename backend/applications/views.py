@@ -173,7 +173,7 @@ class ShortlistItemView(SeekerOnlyMixin, APIView):
 
 
 class ShortlistClearView(SeekerOnlyMixin, APIView):
-    """DELETE /api/shortlist/ -- the "Clear shortlist" button."""
+    """DELETE /api/shortlist/clear/ -- the "Clear shortlist" button."""
 
     def delete(self, request):
         count, _ = ShortlistItem.objects.filter(seeker=self.get_seeker()).delete()

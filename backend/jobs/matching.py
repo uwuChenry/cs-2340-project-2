@@ -33,6 +33,17 @@ def is_recommended(pct):
     return pct >= RECOMMENDATION_THRESHOLD
 
 
+# Two decimal places is roughly a mile. That is all a recruiter needs to see where
+# applicants are clustered, and it means a seeker who pins their exact position
+# (browser geolocation is accurate to metres) does not hand that to every recruiter.
+RECRUITER_COORDINATE_PLACES = 2
+
+
+def coarse(value):
+    """A coordinate rounded for recruiter-facing output, or None if unknown."""
+    return None if value is None else round(float(value), RECRUITER_COORDINATE_PLACES)
+
+
 def haversine_miles(lat1, lon1, lat2, lon2):
     """Great-circle distance in miles, or None if either point is unknown."""
     if None in (lat1, lon1, lat2, lon2):

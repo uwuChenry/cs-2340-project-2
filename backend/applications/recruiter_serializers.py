@@ -11,7 +11,7 @@ SeekerProfile. Do not serialize SeekerProfile directly in a recruiter response.
 
 from rest_framework import serializers
 
-from jobs.matching import skill_match_pct
+from jobs.matching import coarse, skill_match_pct
 
 from .models import Application
 
@@ -68,12 +68,10 @@ class CandidateSerializer(serializers.ModelSerializer):
         return skill_match_pct(job_skills, self.get_skills(application))
 
     def get_latitude(self, application):
-        lat = application.applicant.latitude
-        return float(lat) if lat is not None else None
+        return coarse(application.applicant.latitude)
 
     def get_longitude(self, application):
-        lng = application.applicant.longitude
-        return float(lng) if lng is not None else None
+        return coarse(application.applicant.longitude)
 
 
 class CandidateDetailSerializer(CandidateSerializer):
@@ -176,10 +174,10 @@ class SourcedCandidateSerializer(serializers.Serializer):
         return skill_match_pct(target_skills, self.get_skills(seeker))
 
     def get_latitude(self, seeker):
-        return float(seeker.latitude) if seeker.latitude is not None else None
+        return coarse(seeker.latitude)
 
     def get_longitude(self, seeker):
-        return float(seeker.longitude) if seeker.longitude is not None else None
+        return coarse(seeker.longitude)
 
     def get_hasApplied(self, seeker):
         return seeker.id in self.context.get("applicant_ids", set())
