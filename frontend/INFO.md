@@ -79,6 +79,11 @@ Applications. Recruiter → Pipeline, Candidates, Post a role. Profile and accou
 - **Uploads.** `http.upload(path, FormData)` sends multipart and lets the browser set the boundary.
 - Helpers: `http.get/post/patch/delete/upload`, `messageOf(error)`.
 - The landing page runs on the **server**, so it uses `API_URL` (default `http://127.0.0.1:8000`) instead of the browser client.
+- **Open the app at `localhost:3000` or `127.0.0.1:3000`, not a LAN address.** The API only allows CORS/CSRF from those two origins
+  (and listens on 127.0.0.1). `next.config.ts` sets `allowedDevOrigins: ["127.0.0.1"]`: without it the Next dev server blocks its own
+  assets when the page is opened at `127.0.0.1`, the page never hydrates, and the navbar shows only "Roster | Search" (no Sign in / Sign up).
+- **The navbar waits on `/api/auth/session/`** (6 s timeout). While it's pending the right-hand corner shows a grey placeholder;
+  if the backend is down or too slow it gives up and shows Sign in / Sign up.
 
 ### Two type layers on purpose
 

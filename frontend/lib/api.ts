@@ -76,6 +76,9 @@ type Options = {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
   query?: Query;
+  // Give up after this long. Off by default (uploads can legitimately be slow); used
+  // for the session check, which the navbar waits on.
+  timeoutMs?: number;
 };
 
 export async function api<T>(path: string, options: Options = {}): Promise<T> {
@@ -107,8 +110,12 @@ export async function api<T>(path: string, options: Options = {}): Promise<T> {
       headers,
       credentials: "include",
       body: options.body === undefined ? undefined : isForm ? (options.body as FormData) : JSON.stringify(options.body),
+      signal: options.timeoutMs ? AbortSignal.timeout(options.timeoutMs) : undefined,
     });
-  } catch {
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      throw new ApiError(0, "The server took too long to respond.");
+    }
     throw new ApiError(0, "Can't reach the server. Is the backend running on port 8000?");
   }
 

@@ -78,6 +78,9 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-3 shrink-0 min-h-[34px]">
+          {/* While the session is being checked, show a placeholder rather than nothing,
+              so the corner never looks like it lost its Sign in / Sign up links. */}
+          {!ready && <div aria-hidden className="h-[34px] w-[150px] rounded-lg bg-hover-fill animate-pulse" />}
           {ready && user && <UserMenu user={user} onSignOut={signOut} />}
           {ready && !user && (
             <>

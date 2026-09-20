@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { http, messageOf } from "@/lib/api";
+import { api, http, messageOf } from "@/lib/api";
 import type { ApiRegisterBody, ApiSessionUser } from "@/lib/apiTypes";
 
 type AuthValue = {
@@ -28,8 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let alive = true;
-    http
-      .get<{ user: ApiSessionUser | null }>("/api/auth/session/")
+    // A timeout, so a hung backend can't leave the navbar waiting forever.
+    api<{ user: ApiSessionUser | null }>("/api/auth/session/", { timeoutMs: 6000 })
       .then((data) => alive && setUser(data.user))
       .catch((e) => alive && setError(messageOf(e)))
       .finally(() => alive && setReady(true));
