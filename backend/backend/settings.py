@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-9&p=)+#&sn7(0k7&#l+ta^95aln#7(92a*ot7dzzv5j*@26_au
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+# 'testserver' is what Django's own test client sends as the Host header.
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver']
 
 
 # Application definition
@@ -37,19 +38,28 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Third-party
+    'rest_framework',
+    'corsheaders',
+
+    # Legacy moviesstore apps (kept so existing migrations keep applying)
     'home',
     'movies',
     'accounts',
     'cart',
-    'jobs',
+    # CareerConnect
     'profiles',
+    'jobs',
     'applications',
+    'messaging',
     'moderation',
-
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # CorsMiddleware must sit above CommonMiddleware so it can short-circuit preflights.
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -152,3 +162,38 @@ STATICFILES_DIRS = [
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+# ---------------------------------------------------------------------------
+# CareerConnect API
+# ---------------------------------------------------------------------------
+
+REST_FRAMEWORK = {
+    # Session auth means the Next.js app reuses django.contrib.auth as-is:
+    # log in once, and request.user is populated on every later call.
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 25,
+}
+
+# The Next.js dev server runs on a different origin, so it needs explicit
+# permission to send the session cookie.
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
+CORS_ALLOW_CREDENTIALS = True
+
+# Django 4+ checks Origin on unsafe methods even for same-site session auth.
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+]
+
+# The frontend reads this cookie and echoes it back in the X-CSRFToken header,
+# so it must stay readable from JavaScript.
+CSRF_COOKIE_HTTPONLY = False

@@ -25,6 +25,13 @@ urlpatterns = [
     path('movies/', include('movies.urls')),
     path('accounts/', include('accounts.urls')),
     path('cart/', include('cart.urls')),
+
+    # CareerConnect JSON API consumed by the Next.js frontend.
+    path('api/jobs/', include('jobs.urls')),
+    path('api/', include('applications.urls')),
+    path('api/', include('profiles.urls')),
+    path('api/', include('messaging.urls')),
+    path('api/recruiter/', include('jobs.recruiter_urls')),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

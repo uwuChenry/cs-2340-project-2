@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #FAF9F6; font-family: "Instrument Sans", system-ui, sans-serif; color: #1A1917; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #1B4DFF; text-decoration: none; }
+  a:hover { color: #1F33A8; text-decoration: underline; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  ::placeholder { color: #A3A096; }
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #FAF9F6;">
+
+  <header style="position: sticky; top: 0; z-index: 40; background: rgba(250,249,246,0.92); backdrop-filter: blur(10px); border-bottom: 1px solid #E6E3DC;">
+    <div style="max-width: 1320px; margin: 0 auto; padding: 14px 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 28px;">
+      <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
+        <div style="width: 22px; height: 22px; border-radius: 6px; background: #1A1917; display: grid; place-items: center;">
+          <div style="width: 8px; height: 8px; border-radius: 2px; background: #FAF9F6;"></div>
+        </div>
+        <span style="font-size: 17px; font-weight: 600; letter-spacing: -0.02em;">Roster</span>
+      </div>
+
+      <nav style="display: flex; flex-wrap: wrap; gap: 4px; flex: 1 1 auto; min-width: 0;">
+        <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="4">
+          <button onClick="{{ tab.go }}" style="border: 0; background: {{ tab.bg }}; color: {{ tab.fg }}; padding: 7px 13px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap;" style-hover="background: #EFEDE7;">{{ tab.label }}</button>
+        </sc-for>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+        <div style="display: flex; padding: 3px; background: #EFEDE7; border-radius: 9px;">
+          <button onClick="{{ setSeeker }}" style="border: 0; background: {{ seekerChipBg }}; color: {{ seekerChipFg }}; padding: 5px 11px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer;">Job seeker</button>
+          <button onClick="{{ setRecruiter }}" style="border: 0; background: {{ recruiterChipBg }}; color: {{ recruiterChipFg }}; padding: 5px 11px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer;">Recruiter</button>
+        </div>
+        <div style="width: 32px; height: 32px; border-radius: 50%; background: #E3E6F7; border: 1px solid #D3D8F0; display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #1B4DFF;">{{ initials }}</div>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width: 1320px; margin: 0 auto; padding: 26px 28px 80px;">
+
+    <!-- ============ SEEKER · SEARCH ============ -->
+    <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A867C; margin-bottom: 8px;">Find work</div>
+            <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.025em;">{{ resultCount }} roles match your filters</h1>
+          </div>
+          <div style="display: flex; gap: 3px; padding: 3px; background: #EFEDE7; border-radius: 9px;">
+            <sc-for list="{{ viewModes }}" as="m" hint-placeholder-count="3">
+              <button onClick="{{ m.go }}" style="border: 0; background: {{ m.bg }}; color: {{ m.fg }}; padding: 6px 12px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer;">{{ m.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start;">
+
+          <!-- filters -->
+          <aside style="flex: 1 1 240px; max-width: 320px; background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 18px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <span style="font-size: 14px; font-weight: 600;">Filters</span>
+              <button onClick="{{ clearFilters }}" style="border: 0; background: none; padding: 0; font-size: 13px; color: #6E6B63; cursor: pointer; text-decoration: underline;">Reset</button>
+            </div>
+
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Title or keyword</label>
+            <input value="{{ fQuery }}" onChange="{{ onQuery }}" placeholder="e.g. frontend engineer" style="width: 100%; padding: 9px 11px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 14px; margin-bottom: 16px;" />
+
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 7px;">Skills</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px;">
+              <sc-for list="{{ skillFilters }}" as="s" hint-placeholder-count="6">
+                <button onClick="{{ s.toggle }}" style="border: 1px solid {{ s.bd }}; background: {{ s.bg }}; color: {{ s.fg }}; padding: 5px 10px; border-radius: 999px; font-size: 12.5px; cursor: pointer;">{{ s.name }}</button>
+              </sc-for>
+            </div>
+
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Location</label>
+            <input value="{{ fLocation }}" onChange="{{ onLocation }}" placeholder="City or metro" style="width: 100%; padding: 9px 11px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 14px; margin-bottom: 16px;" />
+
+            <label style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;"><span>Minimum base salary</span><span style="color: #1A1917; font-family: 'IBM Plex Mono', monospace;">{{ minSalaryLabel }}</span></label>
+            <input type="range" min="60" max="220" step="10" value="{{ fMinSalary }}" onChange="{{ onSalary }}" style="width: 100%; margin: 0 0 16px; accent-color: #1B4DFF;" />
+
+            <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 7px;">Work setup</label>
+            <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+              <sc-for list="{{ setupOptions }}" as="o" hint-placeholder-count="3">
+                <button onClick="{{ o.go }}" style="flex: 1; border: 1px solid {{ o.bd }}; background: {{ o.bg }}; color: {{ o.fg }}; padding: 7px 4px; border-radius: 8px; font-size: 12.5px; cursor: pointer;">{{ o.label }}</button>
+              </sc-for>
+            </div>
+
+            <label style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;"><span>Commute radius</span><span style="color: #1A1917; font-family: 'IBM Plex Mono', monospace;">{{ radiusLabel }}</span></label>
+            <input type="range" min="5" max="60" step="5" value="{{ fRadius }}" onChange="{{ onRadius }}" style="width: 100%; margin: 0 0 16px; accent-color: #1B4DFF;" />
+
+            <button onClick="{{ toggleVisa }}" style="width: 100%; display: flex; align-items: center; gap: 10px; border: 1px solid {{ visaBd }}; background: {{ visaBg }}; border-radius: 8px; padding: 10px 11px; cursor: pointer; text-align: left;">
+              <div style="width: 16px; height: 16px; border-radius: 4px; border: 1px solid {{ visaBd }}; background: {{ visaDot }}; flex-shrink: 0;"></div>
+              <span style="font-size: 13px;">Offers visa sponsorship</span>
+            </button>
+          </aside>
+
+          <!-- results list -->
+          <sc-if value="{{ showList }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 3 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 10px;">
+              <sc-if value="{{ hasRecs }}" hint-placeholder-val="{{ true }}">
+                <div style="background: #F2F3FC; border: 1px solid #DCE0F6; border-radius: 12px; padding: 14px 16px;">
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                    <div style="width: 6px; height: 6px; border-radius: 50%; background: #1B4DFF;"></div>
+                    <span style="font-size: 13px; font-weight: 600; color: #1F2E8C;">Recommended from your skills</span>
+                  </div>
+                  <p style="margin: 0; font-size: 13px; color: #4A5490; line-height: 1.5;">{{ recSummary }}</p>
+                </div>
+              </sc-if>
+
+              <sc-for list="{{ jobList }}" as="job" hint-placeholder-count="5">
+                <article onClick="{{ job.open }}" style="background: #FFFFFF; border: 1px solid {{ job.bd }}; border-radius: 12px; padding: 16px 18px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 14px 16px;" style-hover="border-color: #C9C4B8;">
+                  <div style="flex: 1 1 220px; min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 6px;">
+                      <div style="width: 26px; height: 26px; border-radius: 7px; background: {{ job.logoBg }}; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #FFFFFF; flex-shrink: 0;">{{ job.mark }}</div>
+                      <span style="font-size: 13px; color: #6E6B63;">{{ job.company }}</span>
+                      <sc-if value="{{ job.isRec }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: #1B4DFF; background: #ECEFFB; padding: 3px 7px; border-radius: 5px;">{{ job.matchLabel }}</span>
+                      </sc-if>
+                    </div>
+                    <h3 style="margin: 0 0 8px; font-size: 17px; font-weight: 600; letter-spacing: -0.015em;">{{ job.title }}</h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; color: #6E6B63; margin-bottom: 10px;">
+                      <span>{{ job.location }}</span>
+                      <span>{{ job.setup }}</span>
+                      <span style="font-family: 'IBM Plex Mono', monospace; color: #1A1917;">{{ job.salary }}</span>
+                      <span>{{ job.distanceLabel }}</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                      <sc-for list="{{ job.skills }}" as="sk" hint-placeholder-count="3">
+                        <span style="font-size: 12px; color: #4F4C45; background: #F3F1EB; border-radius: 5px; padding: 3px 8px;">{{ sk }}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="flex: 0 1 auto; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; gap: 10px; margin-left: auto;">
+                    <span style="font-size: 12px; color: #A3A096; white-space: nowrap;">{{ job.posted }}</span>
+                    <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px;">
+                      <button onClick="{{ job.toggleCart }}" style="border: 1px solid {{ job.cartBd }}; background: {{ job.cartBg }}; color: {{ job.cartFg }}; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;">{{ job.cartLabel }}</button>
+                      <button onClick="{{ job.apply }}" style="border: 0; background: #1A1917; color: #FAF9F6; padding: 7px 13px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;">{{ job.applyLabel }}</button>
+                    </div>
+                  </div>
+                </article>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <!-- map -->
+          <sc-if value="{{ showMap }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 2 1 340px; min-width: 0; background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; overflow: hidden;">
+              <div style="position: relative; height: 520px; background: #EFEEE8;">
+                <div style="position: absolute; inset: 0; background-image: linear-gradient(#E4E2DA 1px, transparent 1px), linear-gradient(90deg, #E4E2DA 1px, transparent 1px); background-size: 46px 46px;"></div>
+                <div style="position: absolute; left: 0; right: 0; top: 38%; height: 9px; background: #E2E0D7;"></div>
+                <div style="position: absolute; top: 0; bottom: 0; left: 56%; width: 9px; background: #E2E0D7;"></div>
+                <div style="position: absolute; left: -6%; right: 40%; bottom: -8%; height: 130px; background: #DEE6EC; transform: rotate(-7deg);"></div>
+
+                <div style="position: absolute; left: 44%; top: 52%; width: {{ ringSize }}; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(27,77,255,0.07); border: 1px dashed rgba(27,77,255,0.45);"></div>
+                <div style="position: absolute; left: 44%; top: 52%; transform: translate(-50%, -50%); width: 12px; height: 12px; border-radius: 50%; background: #1B4DFF; border: 3px solid #FFFFFF; box-shadow: 0 0 0 1px rgba(27,77,255,0.35);"></div>
+
+                <sc-for list="{{ pins }}" as="p" hint-placeholder-count="6">
+                  <button onClick="{{ p.open }}" style="position: absolute; left: {{ p.left }}%; top: {{ p.top }}%; transform: translate(-50%, -100%); border: 1px solid {{ p.bd }}; background: {{ p.bg }}; color: {{ p.fg }}; padding: 5px 9px; border-radius: 999px; font-size: 12px; font-weight: 600; font-family: 'IBM Plex Mono', monospace; cursor: pointer; box-shadow: 0 2px 6px rgba(26,25,23,0.12); white-space: nowrap;">{{ p.label }}</button>
+                </sc-for>
+
+                <div style="position: absolute; left: 14px; bottom: 14px; background: rgba(255,255,255,0.94); border: 1px solid #E6E3DC; border-radius: 9px; padding: 9px 12px;">
+                  <div style="font-size: 12px; color: #6E6B63; margin-bottom: 2px;">Within {{ radiusLabel }} of you</div>
+                  <div style="font-size: 15px; font-weight: 600;">{{ nearbyCount }} of {{ resultCount }} roles</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ SEEKER · CART ============ -->
+    <sc-if value="{{ isCart }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A867C; margin-bottom: 8px;">Shortlist</div>
+        <h1 style="margin: 0 0 6px; font-size: 30px; font-weight: 600; letter-spacing: -0.025em;">Compare before you apply</h1>
+        <p style="margin: 0 0 22px; font-size: 15px; color: #6E6B63; max-width: 560px; line-height: 1.55;">{{ cartCount }} roles collected. Side-by-side on the things you said matter, then send applications in one pass.</p>
+
+        <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="background: #FFFFFF; border: 1px dashed #DDD9D1; border-radius: 12px; padding: 46px; text-align: center;">
+            <p style="margin: 0 0 14px; font-size: 15px; color: #6E6B63;">Nothing saved yet.</p>
+            <button onClick="{{ goSearch }}" style="border: 0; background: #1A1917; color: #FAF9F6; padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">Browse roles</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ cartHasItems }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; overflow-x: auto;">
+              <div style="display: grid; grid-template-columns: 150px repeat({{ cartCount }}, minmax(200px, 1fr)); min-width: 100%;">
+                <div style="padding: 18px 16px; border-bottom: 1px solid #E6E3DC;"></div>
+                <sc-for list="{{ cartItems }}" as="c" hint-placeholder-count="2">
+                  <div style="padding: 18px 16px; border-bottom: 1px solid #E6E3DC; border-left: 1px solid #F0EEE8;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <div style="width: 22px; height: 22px; border-radius: 6px; background: {{ c.logoBg }}; display: grid; place-items: center; font-size: 10px; font-weight: 600; color: #FFFFFF;">{{ c.mark }}</div>
+                      <span style="font-size: 12.5px; color: #6E6B63;">{{ c.company }}</span>
+                    </div>
+                    <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3;">{{ c.title }}</div>
+                    <button onClick="{{ c.toggleCart }}" style="margin-top: 10px; border: 0; background: none; padding: 0; font-size: 12.5px; color: #8A867C; cursor: pointer; text-decoration: underline;">Remove</button>
+                  </div>
+                </sc-for>
+
+                <sc-for list="{{ compareRows }}" as="row" hint-placeholder-count="5">
+                  <div style="display: grid; grid-column: 1 / -1; grid-template-columns: subgrid;">
+                    <div style="padding: 13px 16px; border-bottom: 1px solid #F0EEE8; font-size: 12.5px; color: #6E6B63;">{{ row.label }}</div>
+                    <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="2">
+                      <div style="padding: 13px 16px; border-bottom: 1px solid #F0EEE8; border-left: 1px solid #F0EEE8; font-size: 13.5px; font-weight: {{ cell.weight }}; color: {{ cell.color }};">{{ cell.text }}</div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+              <button onClick="{{ clearCart }}" style="border: 1px solid #DDD9D1; background: #FFFFFF; padding: 9px 15px; border-radius: 8px; font-size: 14px; cursor: pointer;">Clear shortlist</button>
+              <button onClick="{{ applyAll }}" style="border: 0; background: #1A1917; color: #FAF9F6; padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">Apply to all {{ cartCount }}</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ============ SEEKER · APPLICATIONS ============ -->
+    <sc-if value="{{ isApps }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A867C; margin-bottom: 8px;">Tracker</div>
+        <h1 style="margin: 0 0 22px; font-size: 30px; font-weight: 600; letter-spacing: -0.025em;">Your applications</h1>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 22px;">
+          <sc-for list="{{ stageCounts }}" as="s" hint-placeholder-count="5">
+            <div style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 10px; padding: 13px 14px;">
+              <div style="font-size: 24px; font-weight: 600; letter-spacing: -0.02em;">{{ s.count }}</div>
+              <div style="font-size: 12.5px; color: #6E6B63; margin-top: 2px;">{{ s.label }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; overflow: hidden;">
+          <sc-for list="{{ applications }}" as="a" hint-placeholder-count="4">
+            <div style="padding: 16px 18px; border-bottom: 1px solid #F0EEE8; display: flex; flex-wrap: wrap; gap: 14px 20px; align-items: center;">
+              <div style="flex: 1 1 200px; min-width: 0;">
+                <div style="font-size: 15px; font-weight: 600; letter-spacing: -0.01em;">{{ a.title }}</div>
+                <div style="font-size: 13px; color: #6E6B63; margin-top: 3px;">{{ a.company }} · {{ a.location }}</div>
+              </div>
+              <div style="flex: 2 1 280px; min-width: 0; display: flex; align-items: center; gap: 0;">
+                <sc-for list="{{ a.steps }}" as="st" hint-placeholder-count="5">
+                  <div style="display: flex; align-items: center; flex: 1; min-width: 0;">
+                    <div style="display: flex; flex-direction: column; align-items: center; gap: 5px; flex-shrink: 0;">
+                      <div style="width: 11px; height: 11px; border-radius: 50%; background: {{ st.dot }}; border: 2px solid {{ st.ring }};"></div>
+                      <span style="font-size: 10.5px; color: {{ st.fg }}; white-space: nowrap;">{{ st.label }}</span>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: {{ st.bar }}; margin: 0 2px 16px;"></div>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="flex: 0 1 auto; margin-left: auto; text-align: right;">
+                <div style="font-size: 12.5px; color: #8A867C;">{{ a.updated }}</div>
+                <div style="font-size: 13px; font-weight: 500; color: {{ a.statusFg }}; margin-top: 3px;">{{ a.next }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ SEEKER · PROFILE ============ -->
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start;">
+        <div style="flex: 3 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 14px;">
+          <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 22px;">
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+              <div style="width: 64px; height: 64px; border-radius: 14px; background: #E3E6F7; border: 1px solid #D3D8F0; display: grid; place-items: center; font-size: 20px; font-weight: 600; color: #1B4DFF; flex-shrink: 0;">{{ initials }}</div>
+              <div style="min-width: 0; flex: 1;">
+                <h1 style="margin: 0 0 4px; font-size: 24px; font-weight: 600; letter-spacing: -0.02em;">Maya Ellison</h1>
+                <input value="{{ headline }}" onChange="{{ onHeadline }}" style="width: 100%; padding: 8px 10px; border: 1px solid #E6E3DC; border-radius: 8px; background: #FCFBF9; font-size: 14.5px; margin-bottom: 10px;" />
+                <div style="display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: #6E6B63;">
+                  <span>Austin, TX</span>
+                  <span>Open to remote</span>
+                  <a href="#">portfolio.mayae.dev</a>
+                  <a href="#">github.com/mayae</a>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 22px;">
+            <h2 style="margin: 0 0 12px; font-size: 15px; font-weight: 600;">Skills</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <sc-for list="{{ mySkills }}" as="s" hint-placeholder-count="8">
+                <span style="font-size: 13px; color: #4F4C45; background: #F3F1EB; border: 1px solid #E9E6DE; border-radius: 6px; padding: 5px 10px;">{{ s }}</span>
+              </sc-for>
+              <button style="font-size: 13px; color: #1B4DFF; background: #FFFFFF; border: 1px dashed #C6CCEC; border-radius: 6px; padding: 5px 10px; cursor: pointer;">+ Add skill</button>
+            </div>
+          </section>
+
+          <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 22px;">
+            <h2 style="margin: 0 0 14px; font-size: 15px; font-weight: 600;">Experience</h2>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <sc-for list="{{ experience }}" as="e" hint-placeholder-count="3">
+                <div style="display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 16px;">
+                  <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A867C; padding-top: 2px;">{{ e.years }}</div>
+                  <div>
+                    <div style="font-size: 14.5px; font-weight: 600;">{{ e.role }}</div>
+                    <div style="font-size: 13px; color: #6E6B63; margin: 2px 0 6px;">{{ e.org }}</div>
+                    <p style="margin: 0; font-size: 13.5px; color: #4F4C45; line-height: 1.55;">{{ e.detail }}</p>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </section>
+
+          <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 22px;">
+            <h2 style="margin: 0 0 14px; font-size: 15px; font-weight: 600;">Education</h2>
+            <div style="display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 16px;">
+              <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A867C; padding-top: 2px;">2017 — 2021</div>
+              <div>
+                <div style="font-size: 14.5px; font-weight: 600;">B.S. Computer Science</div>
+                <div style="font-size: 13px; color: #6E6B63; margin-top: 2px;">University of Texas at Austin</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <aside style="flex: 1 1 280px; min-width: 0; max-width: 340px; display: flex; flex-direction: column; gap: 14px;">
+          <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 18px;">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600;">Privacy</h2>
+            <p style="margin: 0 0 14px; font-size: 13px; color: #6E6B63; line-height: 1.5;">Control what recruiters see before you apply.</p>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <sc-for list="{{ privacyRows }}" as="p" hint-placeholder-count="4">
+                <button onClick="{{ p.toggle }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; background: none; padding: 9px 0; cursor: pointer; text-align: left; border-bottom: 1px solid #F0EEE8;">
+                  <span style="min-width: 0;">
+                    <span style="display: block; font-size: 13.5px;">{{ p.label }}</span>
+                    <span style="display: block; font-size: 12px; color: #8A867C; margin-top: 2px;">{{ p.hint }}</span>
+                  </span>
+                  <span style="width: 36px; height: 21px; border-radius: 999px; background: {{ p.trackBg }}; flex-shrink: 0; padding: 2px; display: flex; justify-content: {{ p.justify }};">
+                    <span style="width: 17px; height: 17px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 1px 2px rgba(0,0,0,0.2);"></span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="margin-top: 14px; padding: 11px 12px; background: #F6F5F1; border-radius: 8px; font-size: 12.5px; color: #4F4C45; line-height: 1.5;">{{ privacySummary }}</div>
+          </section>
+        </aside>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECRUITER · POST ============ -->
+    <sc-if value="{{ isPost }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A867C; margin-bottom: 8px;">Openings</div>
+        <h1 style="margin: 0 0 22px; font-size: 30px; font-weight: 600; letter-spacing: -0.025em;">Post a role</h1>
+        <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start;">
+          <section style="flex: 3 1 400px; min-width: 0; background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 22px;">
+            <div style="display: grid; gap: 16px;">
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Role title</label>
+                <input value="Senior Frontend Engineer" style="width: 100%; padding: 10px 12px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 14.5px;" />
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div>
+                  <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Base range</label>
+                  <input value="$150k — $185k" style="width: 100%; padding: 10px 12px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 14.5px;" />
+                </div>
+                <div>
+                  <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Work setup</label>
+                  <select style="width: 100%; padding: 10px 12px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 14.5px;">
+                    <option>Hybrid — 3 days onsite</option>
+                    <option>Remote</option>
+                    <option>Onsite</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Required skills</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 6px; padding: 9px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9;">
+                  <sc-for list="{{ postSkills }}" as="s" hint-placeholder-count="4">
+                    <span style="font-size: 12.5px; background: #ECEFFB; color: #1B4DFF; border-radius: 5px; padding: 4px 9px;">{{ s }}</span>
+                  </sc-for>
+                  <input placeholder="Add skill…" style="border: 0; background: none; outline: none; font-size: 13px; flex: 1; min-width: 80px;" />
+                </div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 500; color: #6E6B63; margin-bottom: 6px;">Description</label>
+                <textarea rows="5" style="width: 100%; padding: 11px 12px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 14px; line-height: 1.55; resize: vertical;">You will own the candidate-facing surfaces of our product: search, map, and application flow. We care about craft, accessible markup, and shipping in small increments.</textarea>
+              </div>
+              <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #F0EEE8; padding-top: 16px;">
+                <button style="border: 1px solid #DDD9D1; background: #FFFFFF; padding: 9px 15px; border-radius: 8px; font-size: 14px; cursor: pointer;">Save draft</button>
+                <button style="border: 0; background: #1A1917; color: #FAF9F6; padding: 9px 16px; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer;">Publish opening</button>
+              </div>
+            </div>
+          </section>
+
+          <section style="flex: 1 1 300px; min-width: 0; max-width: 400px; background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 18px;">
+            <h2 style="margin: 0 0 4px; font-size: 15px; font-weight: 600;">Office location</h2>
+            <p style="margin: 0 0 14px; font-size: 13px; color: #6E6B63; line-height: 1.5;">Drop the pin candidates will see on the map.</p>
+            <div style="position: relative; height: 230px; border-radius: 10px; overflow: hidden; background: #EFEEE8; border: 1px solid #E6E3DC;">
+              <div style="position: absolute; inset: 0; background-image: linear-gradient(#E4E2DA 1px, transparent 1px), linear-gradient(90deg, #E4E2DA 1px, transparent 1px); background-size: 40px 40px;"></div>
+              <div style="position: absolute; left: 0; right: 0; top: 44%; height: 8px; background: #E2E0D7;"></div>
+              <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <span style="background: #1A1917; color: #FAF9F6; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">1104 Rio Grande St</span>
+                <span style="width: 10px; height: 10px; border-radius: 50%; background: #1B4DFF; border: 3px solid #FFFFFF;"></span>
+              </div>
+            </div>
+            <input value="1104 Rio Grande St, Austin, TX" style="width: 100%; margin-top: 12px; padding: 9px 11px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 13.5px;" />
+          </section>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECRUITER · PIPELINE ============ -->
+    <sc-if value="{{ isPipeline }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 20px;">
+          <div>
+            <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A867C; margin-bottom: 8px;">Senior Frontend Engineer</div>
+            <h1 style="margin: 0; font-size: 30px; font-weight: 600; letter-spacing: -0.025em;">Applicant pipeline</h1>
+          </div>
+          <div style="font-size: 13px; color: #6E6B63;">Click a card to open the full review</div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; align-items: start;">
+          <sc-for list="{{ pipeline }}" as="col" hint-placeholder-count="5">
+            <div style="background: #F4F2EC; border: 1px solid #E6E3DC; border-radius: 12px; padding: 10px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 4px 4px 10px;">
+                <span style="font-size: 13px; font-weight: 600;">{{ col.label }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A867C;">{{ col.count }}</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="2">
+                  <button onClick="{{ c.open }}" style="text-align: left; width: 100%; background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 9px; padding: 11px 12px; cursor: pointer;" style-hover="border-color: #C9C4B8;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 7px;">
+                      <span style="width: 22px; height: 22px; border-radius: 50%; background: #E3E6F7; display: grid; place-items: center; font-size: 10px; font-weight: 600; color: #1B4DFF;">{{ c.initials }}</span>
+                      <span style="font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em;">{{ c.name }}</span>
+                    </div>
+                    <div style="font-size: 12px; color: #6E6B63; margin-bottom: 8px;">{{ c.role }}</div>
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #1B4DFF; background: #ECEFFB; padding: 3px 6px; border-radius: 4px;">{{ c.match }}</span>
+                      <span style="font-size: 11.5px; color: #A3A096;">{{ c.age }}</span>
+                    </div>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECRUITER · CANDIDATES ============ -->
+    <sc-if value="{{ isCandidates }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #8A867C; margin-bottom: 8px;">Sourcing</div>
+        <h1 style="margin: 0 0 20px; font-size: 30px; font-weight: 600; letter-spacing: -0.025em;">Find candidates</h1>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 18px; align-items: flex-start;">
+          <aside style="flex: 1 1 270px; min-width: 0; max-width: 340px; display: flex; flex-direction: column; gap: 14px;">
+            <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 18px;">
+              <h2 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Query</h2>
+              <input placeholder="Skills, e.g. React, GraphQL" style="width: 100%; padding: 9px 11px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 13.5px; margin-bottom: 10px;" />
+              <input placeholder="Location or radius" style="width: 100%; padding: 9px 11px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 13.5px; margin-bottom: 10px;" />
+              <input placeholder="Project keyword" style="width: 100%; padding: 9px 11px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 13.5px; margin-bottom: 12px;" />
+              <button onClick="{{ saveSearch }}" style="width: 100%; border: 0; background: #1A1917; color: #FAF9F6; padding: 9px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer;">{{ saveSearchLabel }}</button>
+            </section>
+
+            <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 18px;">
+              <h2 style="margin: 0 0 10px; font-size: 14px; font-weight: 600;">Saved searches</h2>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <sc-for list="{{ savedSearches }}" as="s" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F0EEE8;">
+                    <div style="min-width: 0;">
+                      <div style="font-size: 13.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.name }}</div>
+                      <div style="font-size: 11.5px; color: #8A867C; margin-top: 2px;">{{ s.newCount }} new matches</div>
+                    </div>
+                    <button onClick="{{ s.toggle }}" style="border: 1px solid {{ s.bd }}; background: {{ s.bg }}; color: {{ s.fg }}; font-size: 11.5px; padding: 4px 9px; border-radius: 999px; cursor: pointer; white-space: nowrap;">{{ s.label }}</button>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+            <section style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; overflow: hidden;">
+              <div style="padding: 16px 18px 10px;">
+                <h2 style="margin: 0 0 3px; font-size: 14px; font-weight: 600;">Applicants by location</h2>
+                <p style="margin: 0; font-size: 12.5px; color: #6E6B63;">Clustered across this opening</p>
+              </div>
+              <div style="position: relative; height: 210px; background: #EFEEE8; border-top: 1px solid #E6E3DC;">
+                <div style="position: absolute; inset: 0; background-image: linear-gradient(#E4E2DA 1px, transparent 1px), linear-gradient(90deg, #E4E2DA 1px, transparent 1px); background-size: 38px 38px;"></div>
+                <sc-for list="{{ clusters }}" as="cl" hint-placeholder-count="4">
+                  <div style="position: absolute; left: {{ cl.left }}%; top: {{ cl.top }}%; transform: translate(-50%, -50%); width: {{ cl.size }}; height: {{ cl.size }}; border-radius: 50%; background: rgba(27,77,255,0.16); border: 1px solid rgba(27,77,255,0.45); display: grid; place-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 12px; font-weight: 500; color: #1F2E8C;">{{ cl.count }}</div>
+                </sc-for>
+              </div>
+            </section>
+          </aside>
+
+          <div style="flex: 3 1 380px; min-width: 0; display: flex; flex-direction: column; gap: 10px;">
+            <div style="background: #F2F3FC; border: 1px solid #DCE0F6; border-radius: 12px; padding: 14px 16px;">
+              <div style="font-size: 13px; font-weight: 600; color: #1F2E8C; margin-bottom: 3px;">Recommended for Senior Frontend Engineer</div>
+              <p style="margin: 0; font-size: 13px; color: #4A5490; line-height: 1.5;">Four profiles clear every required skill and are inside your commute band. Ranked by skill overlap and recent project activity.</p>
+            </div>
+            <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="5">
+              <article onClick="{{ c.open }}" style="background: #FFFFFF; border: 1px solid #E6E3DC; border-radius: 12px; padding: 16px 18px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 14px 16px; align-items: center;" style-hover="border-color: #C9C4B8;">
+                <div style="flex: 1 1 220px; min-width: 0;">
+                  <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 6px;">
+                    <span style="width: 28px; height: 28px; border-radius: 50%; background: #E3E6F7; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #1B4DFF;">{{ c.initials }}</span>
+                    <span style="font-size: 16px; font-weight: 600; letter-spacing: -0.015em;">{{ c.name }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #1B4DFF; background: #ECEFFB; padding: 3px 7px; border-radius: 5px;">{{ c.match }}</span>
+                  </div>
+                  <div style="font-size: 13.5px; color: #6E6B63; margin-bottom: 9px;">{{ c.role }} · {{ c.location }}</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                    <sc-for list="{{ c.skills }}" as="sk" hint-placeholder-count="4">
+                      <span style="font-size: 12px; color: #4F4C45; background: #F3F1EB; border-radius: 5px; padding: 3px 8px;">{{ sk }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="flex: 0 1 auto; margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px;">
+                  <button onClick="{{ c.message }}" style="border: 1px solid #DDD9D1; background: #FFFFFF; padding: 7px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; white-space: nowrap;">Message</button>
+                  <button onClick="{{ c.open }}" style="border: 0; background: #1A1917; color: #FAF9F6; padding: 7px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; white-space: nowrap;">Review</button>
+                </div>
+              </article>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- ============ JOB DETAIL / APPLY SHEET ============ -->
+  <sc-if value="{{ jobOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeJob }}" style="position: fixed; inset: 0; z-index: 60; background: rgba(26,25,23,0.32); display: flex; justify-content: flex-end;">
+      <div onClick="{{ stop }}" style="width: min(620px, 100%); height: 100%; background: #FFFFFF; border-left: 1px solid #E6E3DC; overflow-y: auto;">
+        <div style="padding: 24px 28px; border-bottom: 1px solid #F0EEE8; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;">
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 8px;">
+              <div style="width: 28px; height: 28px; border-radius: 7px; background: {{ detail.logoBg }}; display: grid; place-items: center; font-size: 11px; font-weight: 600; color: #FFFFFF;">{{ detail.mark }}</div>
+              <span style="font-size: 13.5px; color: #6E6B63;">{{ detail.company }}</span>
+            </div>
+            <h2 style="margin: 0 0 8px; font-size: 22px; font-weight: 600; letter-spacing: -0.02em;">{{ detail.title }}</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13.5px; color: #6E6B63;">
+              <span>{{ detail.location }}</span>
+              <span>{{ detail.setup }}</span>
+              <span style="font-family: 'IBM Plex Mono', monospace; color: #1A1917;">{{ detail.salary }}</span>
+              <span>{{ detail.distanceLabel }}</span>
+            </div>
+          </div>
+          <button onClick="{{ closeJob }}" style="border: 1px solid #E6E3DC; background: #FFFFFF; width: 30px; height: 30px; border-radius: 8px; font-size: 15px; cursor: pointer; flex-shrink: 0; line-height: 1;">×</button>
+        </div>
+
+        <div style="padding: 22px 28px 0;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+            <button onClick="{{ detail.apply }}" style="border: 0; background: #1A1917; color: #FAF9F6; padding: 10px 18px; border-radius: 9px; font-size: 14.5px; white-space: nowrap; font-weight: 500; cursor: pointer;">{{ detail.applyLabel }}</button>
+            <button onClick="{{ detail.toggleCart }}" style="border: 1px solid {{ detail.cartBd }}; background: {{ detail.cartBg }}; color: {{ detail.cartFg }}; padding: 10px 16px; border-radius: 9px; font-size: 14.5px; white-space: nowrap; cursor: pointer;">{{ detail.cartLabel }}</button>
+          </div>
+
+          <sc-if value="{{ noteOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #FCFBF9; border: 1px solid #E6E3DC; border-radius: 11px; padding: 16px; margin-bottom: 20px;">
+              <div style="font-size: 13.5px; font-weight: 600; margin-bottom: 3px;">Add a tailored note</div>
+              <p style="margin: 0 0 10px; font-size: 12.5px; color: #6E6B63;">Optional, 400 characters. Recruiters see this above your profile.</p>
+              <textarea value="{{ note }}" onChange="{{ onNote }}" rows="4" placeholder="Why this role, in your words…" style="width: 100%; padding: 11px 12px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FFFFFF; font-size: 13.5px; line-height: 1.55; resize: vertical; margin-bottom: 10px;"></textarea>
+              <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px;">
+                <sc-for list="{{ notePrompts }}" as="p" hint-placeholder-count="3">
+                  <button onClick="{{ p.insert }}" style="border: 1px dashed #C6CCEC; background: #FFFFFF; color: #1B4DFF; font-size: 12px; padding: 5px 10px; border-radius: 999px; cursor: pointer;">{{ p.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                <button onClick="{{ cancelNote }}" style="border: 1px solid #DDD9D1; background: #FFFFFF; padding: 8px 14px; border-radius: 8px; font-size: 13.5px; cursor: pointer;">Send without note</button>
+                <button onClick="{{ submitNote }}" style="border: 0; background: #1B4DFF; color: #FFFFFF; padding: 8px 15px; border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer;">Submit application</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ detail.applied }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #EEF6F1; border: 1px solid #CFE6DA; border-radius: 11px; padding: 13px 15px; margin-bottom: 20px; font-size: 13.5px; color: #1F5A41;">Application sent. Tracked under Applications as <strong>Applied</strong>.</div>
+          </sc-if>
+        </div>
+
+        <div style="padding: 0 28px 34px;">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px;">
+            <sc-for list="{{ detail.facts }}" as="f" hint-placeholder-count="4">
+              <div style="background: #FCFBF9; border: 1px solid #F0EEE8; border-radius: 9px; padding: 11px 13px;">
+                <div style="font-size: 11.5px; color: #8A867C; margin-bottom: 3px;">{{ f.label }}</div>
+                <div style="font-size: 13.5px; font-weight: 500;">{{ f.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 8px; font-size: 14px; font-weight: 600;">About the role</h3>
+          <p style="margin: 0 0 20px; font-size: 14px; line-height: 1.6; color: #4F4C45;">{{ detail.about }}</p>
+
+          <h3 style="margin: 0 0 9px; font-size: 14px; font-weight: 600;">Skills they listed</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px;">
+            <sc-for list="{{ detail.skillChips }}" as="sk" hint-placeholder-count="5">
+              <span style="font-size: 12.5px; color: {{ sk.fg }}; background: {{ sk.bg }}; border: 1px solid {{ sk.bd }}; border-radius: 6px; padding: 4px 9px;">{{ sk.text }}</span>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 9px; font-size: 14px; font-weight: 600;">Where it is</h3>
+          <div style="position: relative; height: 170px; border-radius: 10px; overflow: hidden; background: #EFEEE8; border: 1px solid #E6E3DC;">
+            <div style="position: absolute; inset: 0; background-image: linear-gradient(#E4E2DA 1px, transparent 1px), linear-gradient(90deg, #E4E2DA 1px, transparent 1px); background-size: 36px 36px;"></div>
+            <div style="position: absolute; left: 0; right: 0; top: 52%; height: 7px; background: #E2E0D7;"></div>
+            <div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <span style="background: #1A1917; color: #FAF9F6; font-size: 11.5px; padding: 4px 8px; border-radius: 6px; white-space: nowrap;">{{ detail.address }}</span>
+              <span style="width: 10px; height: 10px; border-radius: 50%; background: #1B4DFF; border: 3px solid #FFFFFF;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CANDIDATE REVIEW ============ -->
+  <sc-if value="{{ candOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCand }}" style="position: fixed; inset: 0; z-index: 60; background: rgba(26,25,23,0.32); display: flex; justify-content: flex-end;">
+      <div onClick="{{ stop }}" style="width: min(660px, 100%); height: 100%; background: #FFFFFF; border-left: 1px solid #E6E3DC; overflow-y: auto;">
+        <div style="padding: 24px 28px; border-bottom: 1px solid #F0EEE8; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start;">
+          <div style="display: flex; gap: 14px; min-width: 0;">
+            <div style="width: 48px; height: 48px; border-radius: 12px; background: #E3E6F7; border: 1px solid #D3D8F0; display: grid; place-items: center; font-size: 16px; font-weight: 600; color: #1B4DFF; flex-shrink: 0;">{{ cand.initials }}</div>
+            <div style="min-width: 0;">
+              <h2 style="margin: 0 0 4px; font-size: 21px; font-weight: 600; letter-spacing: -0.02em;">{{ cand.name }}</h2>
+              <div style="font-size: 13.5px; color: #6E6B63;">{{ cand.role }} · {{ cand.location }}</div>
+            </div>
+          </div>
+          <button onClick="{{ closeCand }}" style="border: 1px solid #E6E3DC; background: #FFFFFF; width: 30px; height: 30px; border-radius: 8px; font-size: 15px; cursor: pointer; flex-shrink: 0; line-height: 1;">×</button>
+        </div>
+
+        <div style="padding: 20px 28px 34px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px;">
+            <button onClick="{{ cand.message }}" style="border: 0; background: #1A1917; color: #FAF9F6; padding: 9px 15px; border-radius: 8px; font-size: 13.5px; white-space: nowrap; font-weight: 500; cursor: pointer;">Message in platform</button>
+            <button style="border: 1px solid #DDD9D1; background: #FFFFFF; padding: 9px 15px; border-radius: 8px; font-size: 13.5px; white-space: nowrap; cursor: pointer;">Email candidate</button>
+            <button style="border: 1px solid #DDD9D1; background: #FFFFFF; padding: 9px 15px; border-radius: 8px; font-size: 13.5px; white-space: nowrap; cursor: pointer;">Advance stage</button>
+          </div>
+
+          <div style="background: #FCFBF9; border: 1px solid #E6E3DC; border-radius: 11px; padding: 15px 16px; margin-bottom: 20px;">
+            <div style="font-size: 11.5px; letter-spacing: 0.08em; text-transform: uppercase; font-family: 'IBM Plex Mono', monospace; color: #8A867C; margin-bottom: 7px;">Their note</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.6; color: #3D3A34;">{{ cand.note }}</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px;">
+            <sc-for list="{{ cand.facts }}" as="f" hint-placeholder-count="4">
+              <div style="background: #FFFFFF; border: 1px solid #F0EEE8; border-radius: 9px; padding: 11px 13px;">
+                <div style="font-size: 11.5px; color: #8A867C; margin-bottom: 3px;">{{ f.label }}</div>
+                <div style="font-size: 13.5px; font-weight: 500;">{{ f.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 9px; font-size: 14px; font-weight: 600;">Skill match</h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 22px;">
+            <sc-for list="{{ cand.skillChips }}" as="sk" hint-placeholder-count="5">
+              <span style="font-size: 12.5px; color: {{ sk.fg }}; background: {{ sk.bg }}; border: 1px solid {{ sk.bd }}; border-radius: 6px; padding: 4px 9px;">{{ sk.text }}</span>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 12px; font-size: 14px; font-weight: 600;">Experience</h3>
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+            <sc-for list="{{ cand.experience }}" as="e" hint-placeholder-count="2">
+              <div style="display: grid; grid-template-columns: 100px minmax(0,1fr); gap: 14px;">
+                <div style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #8A867C; padding-top: 2px;">{{ e.years }}</div>
+                <div>
+                  <div style="font-size: 14px; font-weight: 600;">{{ e.role }}</div>
+                  <div style="font-size: 12.5px; color: #6E6B63; margin-top: 2px;">{{ e.org }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ msgOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="border-top: 1px solid #F0EEE8; padding-top: 20px;">
+              <h3 style="margin: 0 0 10px; font-size: 14px; font-weight: 600;">Message thread</h3>
+              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+                <div style="align-self: flex-start; max-width: 78%; background: #F3F1EB; border-radius: 10px 10px 10px 3px; padding: 10px 13px; font-size: 13.5px; line-height: 1.5;">{{ cand.firstName }} opened your profile and saved the role.</div>
+                <div style="align-self: flex-end; max-width: 78%; background: #ECEFFB; border-radius: 10px 10px 3px 10px; padding: 10px 13px; font-size: 13.5px; line-height: 1.5; color: #1F2E8C;">Hi {{ cand.firstName }} — your work on the mapping project lines up well with what we are building. Open to a 20-minute call this week?</div>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input placeholder="Write a message…" style="flex: 1; padding: 10px 12px; border: 1px solid #DDD9D1; border-radius: 8px; background: #FCFBF9; font-size: 13.5px;" />
+                <button style="border: 0; background: #1B4DFF; color: #FFFFFF; padding: 10px 16px; border-radius: 8px; font-size: 13.5px; font-weight: 500; cursor: pointer;">Send</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- toast -->
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%); z-index: 80; background: #1A1917; color: #FAF9F6; padding: 11px 18px; border-radius: 10px; font-size: 13.5px; box-shadow: 0 8px 24px rgba(26,25,23,0.22);">{{ toast }}</div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mapMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Split list + map&quot;,&quot;Map first&quot;,&quot;List only&quot;],&quot;default&quot;:&quot;Split list + map&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Search&quot;},&quot;oneClickApply&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Apply flow&quot;},&quot;defaultRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Job seeker&quot;,&quot;Recruiter&quot;],&quot;default&quot;:&quot;Job seeker&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = {
+    role: null, screen: null, view: null,
+    q: "", loc: "", minSalary: 60, setup: "any", radius: 10, visa: false, skills: [],
+    cart: ["j2", "j5"], applied: {}, appliedStage: {},
+    openJob: null, noteOpen: false, note: "", openCand: null, msgOpen: false,
+    headline: "Frontend engineer focused on search, maps and accessible UI",
+    privacy: { name: true, contact: false, current: true, openToWork: true },
+    savedOn: { s1: true, s2: false, s3: true }, searchSaved: false,
+    toast: ""
+  };
+
+  jobs = [
+    { id: "j1", title: "Senior Frontend Engineer", company: "Northline Labs", mark: "NL", logoBg: "#1B4DFF", location: "Austin, TX", setup: "Hybrid", salary: "$150k–$185k", low: 150, dist: 4, visa: true, posted: "2d ago", left: 49, top: 44, address: "1104 Rio Grande St", skills: ["React", "TypeScript", "Mapbox", "Accessibility"], about: "Own the candidate-facing surfaces: search, map, and the application flow. Small team, weekly releases, real design partnership." },
+    { id: "j2", title: "Product Engineer, Growth", company: "Havenly", mark: "HV", logoBg: "#1F5A41", location: "Remote (US)", setup: "Remote", salary: "$135k–$160k", low: 135, dist: 0, visa: false, posted: "4d ago", left: 24, top: 63, address: "Fully distributed", skills: ["React", "Node", "Experimentation"], about: "Run the experiment pipeline end to end, from hypothesis to shipped surface. You will work directly with the head of product." },
+    { id: "j3", title: "UI Engineer, Design Systems", company: "Cartwheel", mark: "CW", logoBg: "#8A3E1E", location: "Austin, TX", setup: "Onsite", salary: "$140k–$170k", low: 140, dist: 9, visa: true, posted: "1w ago", left: 66, top: 31, address: "300 W 6th St", skills: ["TypeScript", "Design Systems", "Figma"], about: "Maintain the component library used by nine product teams. Heavy emphasis on documentation and migration tooling." },
+    { id: "j4", title: "Full Stack Engineer", company: "Mesa Point", mark: "MP", logoBg: "#4A4A8C", location: "Round Rock, TX", setup: "Hybrid", salary: "$125k–$150k", low: 125, dist: 18, visa: false, posted: "3d ago", left: 78, top: 18, address: "2500 Hesters Crossing", skills: ["Node", "Postgres", "React"], about: "Backend-leaning full stack work on the scheduling service. Comfortable owning migrations and on-call rotation." },
+    { id: "j5", title: "Frontend Engineer, Maps", company: "Terrafold", mark: "TF", logoBg: "#1A1917", location: "Austin, TX", setup: "Hybrid", salary: "$145k–$175k", low: 145, dist: 6, visa: true, posted: "1d ago", left: 38, top: 57, address: "801 Barton Springs Rd", skills: ["React", "Mapbox", "WebGL", "TypeScript"], about: "Build interactive geospatial views for logistics planners. You will pair with data engineers on tile pipelines." },
+    { id: "j6", title: "Senior Web Engineer", company: "Kestrel Health", mark: "KH", logoBg: "#0F6C7A", location: "San Marcos, TX", setup: "Onsite", salary: "$130k–$155k", low: 130, dist: 31, visa: false, posted: "5d ago", left: 56, top: 82, address: "700 N LBJ Dr", skills: ["React", "Accessibility", "Testing"], about: "Patient-facing scheduling and records UI with a hard accessibility bar. WCAG 2.2 AA is a requirement, not a goal." },
+    { id: "j7", title: "Staff Engineer, Platform UI", company: "Orrick Data", mark: "OD", logoBg: "#6B3FA0", location: "Remote (US)", setup: "Remote", salary: "$180k–$215k", low: 180, dist: 0, visa: true, posted: "6d ago", left: 14, top: 26, address: "Fully distributed", skills: ["TypeScript", "GraphQL", "Design Systems"], about: "Set frontend direction across four product lines. Half architecture, half mentorship." }
+  ];
+
+  mySkills = ["React", "TypeScript", "Mapbox", "Accessibility", "Node", "Testing", "GraphQL", "Figma"];
+
+  candidateData = [
+    { id: "c1", name: "Dev Raman", role: "Senior Frontend Engineer", location: "Austin, TX · 5 mi", match: "94% match", skills: ["React", "TypeScript", "Mapbox", "WebGL"], note: "I spent the last two years on a logistics mapping product, mostly vector tiles and clustering at scale. Your posting is the first I have seen that treats the map as the primary surface rather than a tab.", stage: "Review" },
+    { id: "c2", name: "Priya Shah", role: "UI Engineer", location: "Remote · CST", match: "88% match", skills: ["React", "Design Systems", "Figma", "Testing"], note: "Design systems are my thing. I migrated 140 components off a legacy library last year without a freeze window.", stage: "Interview" },
+    { id: "c3", name: "Marcus Bell", role: "Product Engineer", location: "Round Rock, TX · 17 mi", match: "81% match", skills: ["React", "Node", "Postgres"], note: "Generalist who likes owning a feature end to end. Happy to talk through the scheduling rewrite I led.", stage: "Applied" },
+    { id: "c4", name: "Lena Ortiz", role: "Frontend Engineer", location: "Austin, TX · 2 mi", match: "79% match", skills: ["TypeScript", "Accessibility", "React"], note: "Accessibility is where I do my best work — I run the audit process at my current company.", stage: "Applied" },
+    { id: "c5", name: "Tomas Vieira", role: "Staff Engineer", location: "Remote · EST", match: "76% match", skills: ["GraphQL", "TypeScript", "Node"], note: "Looking for a role with real architecture ownership after five years of platform work.", stage: "Offer" }
+  ];
+
+  t(msg) {
+    clearTimeout(this._tt);
+    this.setState({ toast: msg });
+    this._tt = setTimeout(() => this.setState({ toast: "" }), 2200);
+  }
+
+  screenNow() {
+    const role = this.state.role ?? (this.props.defaultRole === "Recruiter" ? "recruiter" : "seeker");
+    const def = role === "seeker" ? "search" : "pipeline";
+    return { role, screen: this.state.screen ?? def };
+  }
+
+  go(screen) { return () => this.setState({ screen, openJob: null, openCand: null }); }
+
+  renderVals() {
+    const S = this.state;
+    const { role, screen } = this.screenNow();
+    const mapMode = this.props.mapMode ?? "Split list + map";
+    const view = S.view ?? (mapMode === "Map first" ? "map" : mapMode === "List only" ? "list" : "split");
+    const ACC = "#1B4DFF", INK = "#1A1917", MUT = "#6E6B63";
+
+    const tabDefs = role === "seeker"
+      ? [["search", "Search"], ["cart", `Shortlist (${S.cart.length})`], ["apps", "Applications"], ["profile", "Profile"]]
+      : [["pipeline", "Pipeline"], ["candidates", "Candidates"], ["post", "Post a role"]];
+
+    const tabs = tabDefs.map(([id, label]) => ({
+      label, go: this.go(id),
+      bg: screen === id ? "#FFFFFF" : "transparent",
+      fg: screen === id ? INK : MUT
+    }));
+
+    // ---- filtering
+    const q = S.q.trim().toLowerCase();
+    const loc = S.loc.trim().toLowerCase();
+    const filtered = this.jobs.filter(j => {
+      if (q && !(j.title + " " + j.company).toLowerCase().includes(q)) return false;
+      if (loc && !j.location.toLowerCase().includes(loc)) return false;
+      if (j.low < S.minSalary) return false;
+      if (S.setup === "remote" && j.setup !== "Remote") return false;
+      if (S.setup === "onsite" && j.setup === "Remote") return false;
+      if (S.visa && !j.visa) return false;
+      if (S.skills.length && !S.skills.every(s => j.skills.includes(s))) return false;
+      return true;
+    });
+
+    const overlap = j => j.skills.filter(s => this.mySkills.includes(s)).length / j.skills.length;
+    const decorate = j => {
+      const inCart = S.cart.includes(j.id);
+      const applied = !!S.applied[j.id];
+      const pct = Math.round(overlap(j) * 100);
+      return {
+        ...j,
+        skills: j.skills,
+        isRec: pct >= 75,
+        matchLabel: pct + "% match",
+        setup: j.setup === "Remote" ? "Remote" : j.setup + " · onsite days",
+        distanceLabel: j.dist === 0 ? "Anywhere" : j.dist + " mi away",
+        bd: applied ? "#CFE6DA" : "#E6E3DC",
+        inCart, applied,
+        cartLabel: inCart ? "In shortlist" : "Add to shortlist",
+        cartBg: inCart ? "#ECEFFB" : "#FFFFFF",
+        cartFg: inCart ? ACC : INK,
+        cartBd: inCart ? "#C6CCEC" : "#DDD9D1",
+        applyLabel: applied ? "Applied" : "One-click apply",
+        open: e => { if (e) e.stopPropagation(); this.setState({ openJob: j.id, noteOpen: false }); },
+        toggleCart: e => {
+          if (e) e.stopPropagation();
+          const has = this.state.cart.includes(j.id);
+          this.setState({ cart: has ? this.state.cart.filter(x => x !== j.id) : [...this.state.cart, j.id] });
+          this.t(has ? "Removed from shortlist" : "Added to shortlist");
+        },
+        apply: e => {
+          if (e) e.stopPropagation();
+          if (this.state.applied[j.id]) return;
+          if (this.props.oneClickApply === false) { this.setState({ openJob: j.id, noteOpen: true }); return; }
+          this.setState({ applied: { ...this.state.applied, [j.id]: true }, openJob: j.id, noteOpen: true });
+          this.t("Applied to " + j.company + " — add a note?");
+        }
+      };
+    };
+
+    const jobList = filtered.map(decorate).sort((a, b) => (b.isRec ? 1 : 0) - (a.isRec ? 1 : 0));
+    const nearby = filtered.filter(j => j.dist <= S.radius || j.dist === 0);
+
+    const skillFilters = ["React", "TypeScript", "Node", "Mapbox", "Accessibility", "GraphQL"].map(name => {
+      const on = S.skills.includes(name);
+      return {
+        name, on,
+        bg: on ? "#ECEFFB" : "#FFFFFF", fg: on ? ACC : "#4F4C45", bd: on ? "#C6CCEC" : "#DDD9D1",
+        toggle: () => this.setState({ skills: on ? S.skills.filter(s => s !== name) : [...S.skills, name] })
+      };
+    });
+
+    const setupOptions = [["any", "Any"], ["remote", "Remote"], ["onsite", "Onsite"]].map(([id, label]) => ({
+      label, go: () => this.setState({ setup: id }),
+      bg: S.setup === id ? "#ECEFFB" : "#FFFFFF", fg: S.setup === id ? ACC : "#4F4C45", bd: S.setup === id ? "#C6CCEC" : "#DDD9D1"
+    }));
+
+    const viewModes = [["list", "List"], ["split", "Split"], ["map", "Map"]].map(([id, label]) => ({
+      label, go: () => this.setState({ view: id }),
+      bg: view === id ? "#FFFFFF" : "transparent", fg: view === id ? INK : MUT
+    }));
+
+    const cartItems = S.cart.map(id => decorate(this.jobs.find(j => j.id === id))).filter(Boolean);
+    const cell = (text, strong) => ({ text, weight: strong ? "600" : "400", color: strong ? INK : "#4F4C45" });
+    const compareRows = [
+      { label: "Base salary", cells: cartItems.map(c => cell(c.salary, true)) },
+      { label: "Location", cells: cartItems.map(c => cell(c.location)) },
+      { label: "Work setup", cells: cartItems.map(c => cell(c.setup)) },
+      { label: "Distance", cells: cartItems.map(c => cell(c.distanceLabel)) },
+      { label: "Visa sponsorship", cells: cartItems.map(c => cell(c.visa ? "Yes" : "Not offered")) },
+      { label: "Skill match", cells: cartItems.map(c => cell(c.matchLabel, true)) },
+      { label: "Posted", cells: cartItems.map(c => cell(c.posted)) }
+    ];
+
+    // ---- applications
+    const STAGES = ["Applied", "Review", "Interview", "Offer", "Closed"];
+    const baseApps = [
+      { id: "a1", title: "Frontend Engineer, Maps", company: "Terrafold", location: "Austin, TX", stage: 2, updated: "Updated 1d ago", next: "Onsite loop Thu" },
+      { id: "a2", title: "UI Engineer, Design Systems", company: "Cartwheel", location: "Austin, TX", stage: 1, updated: "Updated 3d ago", next: "In review" },
+      { id: "a3", title: "Staff Engineer, Platform UI", company: "Orrick Data", location: "Remote", stage: 3, updated: "Updated 5h ago", next: "Offer received" },
+      { id: "a4", title: "Full Stack Engineer", company: "Mesa Point", location: "Round Rock, TX", stage: 4, updated: "Updated 2w ago", next: "Role closed" }
+    ];
+    const extra = Object.keys(S.applied).map(id => {
+      const j = this.jobs.find(x => x.id === id);
+      return j && !baseApps.some(a => a.company === j.company)
+        ? { id: "n" + id, title: j.title, company: j.company, location: j.location, stage: 0, updated: "Just now", next: "Submitted" }
+        : null;
+    }).filter(Boolean);
+    const applications = [...extra, ...baseApps].map(a => ({
+      ...a,
+      statusFg: a.stage === 3 ? "#1F5A41" : a.stage === 4 ? "#8A867C" : INK,
+      steps: STAGES.map((label, i) => ({
+        label,
+        dot: i <= a.stage ? (a.stage === 4 && i === 4 ? "#8A867C" : ACC) : "#FFFFFF",
+        ring: i <= a.stage ? (a.stage === 4 && i === 4 ? "#8A867C" : ACC) : "#DDD9D1",
+        bar: i < a.stage ? ACC : "#E6E3DC",
+        fg: i <= a.stage ? "#4F4C45" : "#A3A096"
+      }))
+    }));
+    const stageCounts = STAGES.map((label, i) => ({ label, count: applications.filter(a => a.stage === i).length }));
+
+    // ---- privacy
+    const pDefs = [
+      ["name", "Show my full name", "Otherwise recruiters see initials"],
+      ["contact", "Show contact details", "Email and phone on your profile"],
+      ["current", "Show current employer", "Hidden from your current company either way"],
+      ["openToWork", "Signal open to work", "Surfaces you in recruiter search"]
+    ];
+    const privacyRows = pDefs.map(([key, label, hint]) => ({
+      label, hint,
+      trackBg: S.privacy[key] ? ACC : "#DDD9D1",
+      justify: S.privacy[key] ? "flex-end" : "flex-start",
+      toggle: () => this.setState({ privacy: { ...S.privacy, [key]: !S.privacy[key] } })
+    }));
+    const hidden = pDefs.filter(([k]) => !S.privacy[k]).length;
+    const privacySummary = hidden === 0
+      ? "Your full profile is visible to verified recruiters."
+      : hidden + (hidden === 1 ? " field is" : " fields are") + " hidden until you apply to a role.";
+
+    // ---- recruiter
+    const cdec = c => ({
+      ...c,
+      initials: c.name.split(" ").map(w => w[0]).join(""),
+      firstName: c.name.split(" ")[0],
+      open: e => { if (e) e.stopPropagation(); this.setState({ openCand: c.id, msgOpen: false }); },
+      message: e => { if (e) e.stopPropagation(); this.setState({ openCand: c.id, msgOpen: true }); }
+    });
+    const candidates = this.candidateData.map(cdec);
+    const pipeline = STAGES.map(label => {
+      const cards = candidates.filter(c => c.stage === label).map(c => ({ ...c, age: "3d" }));
+      return { label, count: cards.length, cards };
+    });
+    const clusters = [
+      { left: 42, top: 46, size: "78px", count: 31 },
+      { left: 70, top: 28, size: "52px", count: 14 },
+      { left: 22, top: 68, size: "42px", count: 8 },
+      { left: 62, top: 76, size: "34px", count: 4 }
+    ];
+    const savedSearches = [
+      ["s1", "React + Mapbox, Austin 25mi", 6],
+      ["s2", "Design systems, remote US", 2],
+      ["s3", "New grads, accessibility focus", 11]
+    ].map(([id, name, n]) => ({
+      name, newCount: n,
+      label: S.savedOn[id] ? "Alerts on" : "Alerts off",
+      bg: S.savedOn[id] ? "#ECEFFB" : "#FFFFFF", fg: S.savedOn[id] ? ACC : MUT, bd: S.savedOn[id] ? "#C6CCEC" : "#DDD9D1",
+      toggle: () => this.setState({ savedOn: { ...S.savedOn, [id]: !S.savedOn[id] } })
+    }));
+
+    // ---- job detail
+    const chip = (text, hit) => ({ text, fg: hit ? ACC : "#4F4C45", bg: hit ? "#ECEFFB" : "#F3F1EB", bd: hit ? "#C6CCEC" : "#E9E6DE" });
+    const dj = S.openJob ? this.jobs.find(j => j.id === S.openJob) : null;
+    const detail = dj ? {
+      ...decorate(dj),
+      facts: [
+        { label: "Level", value: "Senior · IC4" },
+        { label: "Team size", value: "6 engineers" },
+        { label: "Visa sponsorship", value: dj.visa ? "Available" : "Not offered" },
+        { label: "Hiring since", value: dj.posted }
+      ],
+      skillChips: dj.skills.map(s => chip(s, this.mySkills.includes(s)))
+    } : { facts: [], skillChips: [], logoBg: "#1A1917" };
+
+    const cc = S.openCand ? this.candidateData.find(c => c.id === S.openCand) : null;
+    const cand = cc ? {
+      ...cdec(cc),
+      facts: [
+        { label: "Stage", value: cc.stage },
+        { label: "Applied", value: "3 days ago" },
+        { label: "Salary expectation", value: "$155k base" },
+        { label: "Notice period", value: "4 weeks" }
+      ],
+      skillChips: ["React", "TypeScript", "Mapbox", "Accessibility", "Node"].map(s => chip(s, cc.skills.includes(s))),
+      experience: [
+        { years: "2022 — now", role: cc.role, org: "Fielder Logistics" },
+        { years: "2019 — 2022", role: "Frontend Engineer", org: "Basalt Software" }
+      ]
+    } : { facts: [], skillChips: [], experience: [] };
+
+    const notePrompts = [
+      ["Why this team", "Your work on the map surface is the closest match to what I want to be building next. "],
+      ["Relevant project", "I shipped a clustered map view over 40k records last quarter — happy to walk through the tile strategy. "],
+      ["Availability", "I can start within four weeks and I am in this metro already. "]
+    ].map(([label, text]) => ({ label, insert: () => this.setState({ note: (this.state.note + text).slice(0, 400) }) }));
+
+    return {
+      tabs, initials: "ME", toast: S.toast, stop: e => e.stopPropagation(),
+      setSeeker: () => this.setState({ role: "seeker", screen: "search", openJob: null, openCand: null }),
+      setRecruiter: () => this.setState({ role: "recruiter", screen: "pipeline", openJob: null, openCand: null }),
+      seekerChipBg: role === "seeker" ? "#FFFFFF" : "transparent", seekerChipFg: role === "seeker" ? INK : MUT,
+      recruiterChipBg: role === "recruiter" ? "#FFFFFF" : "transparent", recruiterChipFg: role === "recruiter" ? INK : MUT,
+
+      isSearch: role === "seeker" && screen === "search",
+      isCart: role === "seeker" && screen === "cart",
+      isApps: role === "seeker" && screen === "apps",
+      isProfile: role === "seeker" && screen === "profile",
+      isPipeline: role === "recruiter" && screen === "pipeline",
+      isCandidates: role === "recruiter" && screen === "candidates",
+      isPost: role === "recruiter" && screen === "post",
+
+      searchCols: view === "list" ? "260px minmax(0,1fr)" : view === "map" ? "260px minmax(0,1fr)" : "260px minmax(0,1.15fr) minmax(0,1fr)",
+      showList: view !== "map", showMap: view !== "list",
+      viewModes, jobList, resultCount: filtered.length, nearbyCount: nearby.length,
+      hasRecs: jobList.some(j => j.isRec),
+      recSummary: "Based on " + this.mySkills.slice(0, 3).join(", ") + " and your saved roles, " + jobList.filter(j => j.isRec).length + " of these clear every skill you listed.",
+      pins: filtered.map(j => ({
+        left: j.left, top: j.top, label: j.salary.split("–")[0].replace("$", "$"),
+        bg: j.dist <= S.radius || j.dist === 0 ? "#FFFFFF" : "rgba(255,255,255,0.6)",
+        fg: j.dist <= S.radius || j.dist === 0 ? INK : "#A3A096",
+        bd: j.dist <= S.radius || j.dist === 0 ? "#C6CCEC" : "#E6E3DC",
+        open: () => this.setState({ openJob: j.id, noteOpen: false })
+      })),
+      ringSize: (70 + S.radius * 3.4) + "px",
+
+      fQuery: S.q, onQuery: e => this.setState({ q: e.target.value }),
+      fLocation: S.loc, onLocation: e => this.setState({ loc: e.target.value }),
+      fMinSalary: S.minSalary, onSalary: e => this.setState({ minSalary: +e.target.value }),
+      minSalaryLabel: "$" + S.minSalary + "k",
+      fRadius: S.radius, onRadius: e => this.setState({ radius: +e.target.value }),
+      radiusLabel: S.radius + " mi",
+      skillFilters, setupOptions,
+      visaBg: S.visa ? "#ECEFFB" : "#FFFFFF", visaBd: S.visa ? "#C6CCEC" : "#DDD9D1", visaDot: S.visa ? ACC : "#FFFFFF",
+      toggleVisa: () => this.setState({ visa: !S.visa }),
+      clearFilters: () => this.setState({ q: "", loc: "", minSalary: 60, setup: "any", visa: false, skills: [], radius: 10 }),
+
+      cartItems, compareRows, cartCount: cartItems.length,
+      cartEmpty: cartItems.length === 0, cartHasItems: cartItems.length > 0,
+      clearCart: () => { this.setState({ cart: [] }); this.t("Shortlist cleared"); },
+      applyAll: () => {
+        const next = { ...S.applied };
+        S.cart.forEach(id => { next[id] = true; });
+        this.setState({ applied: next, screen: "apps" });
+        this.t(S.cart.length + " applications sent");
+      },
+      goSearch: this.go("search"),
+
+      applications, stageCounts,
+      headline: S.headline, onHeadline: e => this.setState({ headline: e.target.value }),
+      mySkills: this.mySkills, privacyRows, privacySummary,
+      experience: [
+        { years: "2022 — now", role: "Frontend Engineer", org: "Fielder Logistics", detail: "Owned the planner map surface: clustering, radius filters, and offline tiles. Cut first-paint on the map view from 2.4s to 900ms." },
+        { years: "2020 — 2022", role: "Software Engineer", org: "Basalt Software", detail: "Built the design system used by three product teams and ran the accessibility audit process." }
+      ],
+
+      postSkills: ["React", "TypeScript", "Mapbox", "Accessibility"],
+      pipeline, candidates, clusters, savedSearches,
+      saveSearchLabel: S.searchSaved ? "Search saved" : "Save this search",
+      saveSearch: () => { this.setState({ searchSaved: true }); this.t("Saved — you will get alerts on new matches"); },
+
+      jobOpen: !!dj, detail, closeJob: () => this.setState({ openJob: null, noteOpen: false }),
+      noteOpen: S.noteOpen, note: S.note, onNote: e => this.setState({ note: e.target.value.slice(0, 400) }), notePrompts,
+      cancelNote: () => { this.setState({ noteOpen: false }); this.t("Application sent without a note"); },
+      submitNote: () => {
+        this.setState({ noteOpen: false, applied: { ...S.applied, [S.openJob]: true } });
+        this.t("Application sent with your note");
+      },
+
+      candOpen: !!cc, cand, msgOpen: S.msgOpen,
+      closeCand: () => this.setState({ openCand: null, msgOpen: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

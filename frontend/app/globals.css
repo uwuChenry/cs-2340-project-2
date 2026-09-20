@@ -1,26 +1,97 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-sans: var(--font-instrument-sans), "Instrument Sans", system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+
+  --color-ground: #FAF9F6;
+  --color-surface: #FFFFFF;
+  --color-surface-sunken: #FCFBF9;
+  --color-surface-muted: #F6F5F1;
+  --color-surface-tint: #F4F2EC;
+
+  --color-ink: #1A1917;
+  --color-ink-2: #3D3A34;
+  --color-ink-3: #4F4C45;
+  --color-muted: #6E6B63;
+  --color-muted-2: #8A867C;
+  --color-muted-3: #A3A096;
+
+  --color-line: #E6E3DC;
+  --color-line-soft: #F0EEE8;
+  --color-line-strong: #DDD9D1;
+  --color-line-hover: #C9C4B8;
+  --color-line-tag: #E9E6DE;
+  --color-hover-fill: #EFEDE7;
+
+  --color-accent: #1B4DFF;
+  --color-accent-deep: #1F2E8C;
+  --color-accent-text: #4A5490;
+  --color-accent-tint: #ECEFFB;
+  --color-accent-tint-2: #F2F3FC;
+  --color-accent-tint-3: #E3E6F7;
+  --color-accent-border: #C6CCEC;
+  --color-accent-border-2: #DCE0F6;
+  --color-accent-border-3: #D3D8F0;
+
+  --color-success: #1F5A41;
+  --color-success-bg: #EEF6F1;
+  --color-success-border: #CFE6DA;
+
+  --color-danger: #A32A1F;
+  --color-danger-bg: #FBF0EE;
+  --color-danger-border: #EBCFCB;
+
+  --color-tag-fill: #F3F1EB;
+  --color-scrim: rgba(26, 25, 23, 0.32);
+
+  --color-map-ground: #EFEEE8;
+  --color-map-grid: #E4E2DA;
+  --color-map-road: #E2E0D7;
+  --color-map-water: #DEE6EC;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html,
+body {
+  background: var(--color-ground);
+  color: var(--color-ink);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-family: var(--font-sans);
+}
+
+/* These live in the base layer so Tailwind utilities can override them. Unlayered
+   rules always beat @layer utilities, which made `text-ground` on primary buttons
+   and `text-muted` on nav links lose to `color: inherit` / the link colour. */
+@layer base {
+  a {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+  a:hover {
+    color: var(--color-accent-deep);
+    text-decoration: underline;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+::placeholder {
+  color: var(--color-muted-3);
+}
+
+input[type="range"] {
+  accent-color: var(--color-accent);
 }
