@@ -2,5 +2,11 @@
 /.next/
 /frontend/.next/dev/static/
 
+# Local Python environment and generated files
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+
 # User-uploaded profile photos are personal data; never commit them.
 /backend/media/avatars/
