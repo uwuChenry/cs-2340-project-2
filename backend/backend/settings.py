@@ -43,11 +43,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
 
-    # Legacy moviesstore apps (kept so existing migrations keep applying)
-    'home',
-    'movies',
-    'accounts',
-    'cart',
     # CareerConnect
     'profiles',
     'jobs',

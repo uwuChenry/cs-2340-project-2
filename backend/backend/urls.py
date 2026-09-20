@@ -21,10 +21,6 @@ from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', include('home.urls')),
-    path('movies/', include('movies.urls')),
-    path('accounts/', include('accounts.urls')),
-    path('cart/', include('cart.urls')),
 
     # CareerConnect JSON API consumed by the Next.js frontend.
     path('api/jobs/', include('jobs.urls')),
