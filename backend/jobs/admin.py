@@ -1,10 +1,12 @@
 from django.contrib import admin
 
+from moderation.admin_utils import CSVExportMixin
+
 from .models import JobPosting, SavedSearch
 
 
 @admin.register(JobPosting)
-class JobPostingAdmin(admin.ModelAdmin):
+class JobPostingAdmin(CSVExportMixin, admin.ModelAdmin):
     list_display = ("title", "company", "city", "work_arrangement", "status", "posted_at")
     list_filter = ("status", "work_arrangement", "offers_visa_sponsorship", "company")
     search_fields = ("title", "company__name", "city")

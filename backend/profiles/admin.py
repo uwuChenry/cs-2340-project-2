@@ -1,5 +1,7 @@
 from django.contrib import admin
 
+from moderation.admin_utils import CSVExportMixin
+
 from .models import (
     Company,
     Education,
@@ -34,7 +36,7 @@ class ProjectInline(admin.TabularInline):
 
 
 @admin.register(SeekerProfile)
-class SeekerProfileAdmin(admin.ModelAdmin):
+class SeekerProfileAdmin(CSVExportMixin, admin.ModelAdmin):
     list_display = ("user", "headline", "location", "open_to_work")
     list_filter = ("open_to_work", "open_to_remote")
     search_fields = ("user__username", "user__first_name", "user__last_name", "headline")
@@ -43,7 +45,7 @@ class SeekerProfileAdmin(admin.ModelAdmin):
 
 
 @admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(CSVExportMixin, admin.ModelAdmin):
     list_display = ("user", "role", "created_at")
     list_filter = ("role",)
     search_fields = ("user__username",)

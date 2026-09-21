@@ -1,6 +1,9 @@
 """Candidate sourcing for recruiters."""
 
+from django.conf import settings
+from django.core.mail import send_mail
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.response import Response
@@ -10,6 +13,8 @@ from applications.models import Application
 from applications.recruiter_serializers import SourcedCandidateSerializer
 from jobs.models import JobPosting, SavedSearch
 from jobs.matching import haversine_miles, skill_match_pct
+from messaging.models import EmailLog
+from messaging.serializers import EmailLogSerializer
 
 from .models import SeekerProfile
 from .permissions import RecruiterContextMixin
@@ -163,8 +168,69 @@ class SeekerDetailView(RecruiterContextMixin, APIView):
             data["matchPct"] = skill_match_pct(job_skills, seeker_skills)
             data["matchedSkills"] = [s for s in job_skills if s in set(seeker_skills)]
         return Response(data)
+    
+class EmailCandidateView(RecruiterContextMixin, APIView):
+    """POST /api/recruiter/candidates/<pk>/email/ -- email a candidate for real.
 
+    pk is always a SeekerProfile id -- CandidateSheet resolves to the underlying
+    seeker whether it opened from a sourced card or an application, so one
+    endpoint covers both. Visibility mirrors SeekerDetailView: open to work, or
+    already applied to one of this recruiter's postings. Sending is refused
+    (403, not a silent no-op) when the seeker has not opted in to show_contact,
+    the same switch PublicSeekerSerializer.get_email checks -- a candidate who
+    hid their email should not be reachable by working around the UI.
+    """
 
+    def post(self, request, pk):
+        own_applicant_ids = Application.objects.filter(
+            job__in=self.own_jobs(),
+        ).values_list("applicant_id", flat=True)
+
+        seeker = (
+            SeekerProfile.objects
+            .filter(Q(open_to_work=True) | Q(id__in=own_applicant_ids))
+            .filter(pk=pk)
+            .select_related("user")
+            .first()
+        )
+        if seeker is None:
+            return Response(
+                {"detail": "No such candidate, or they are not open to being sourced."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        if not seeker.show_contact:
+            return Response(
+                {"detail": "This candidate keeps their contact info private."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        subject = (request.data.get("subject") or "").strip()
+        body = (request.data.get("body") or "").strip()
+        if not subject or not body:
+            return Response(
+                {"detail": "A subject and message are both required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        job = None
+        job_id = request.data.get("job")
+        if job_id:
+            # Only the recruiter's own posting may be referenced.
+            job = get_object_or_404(self.own_jobs(), pk=job_id)
+
+        send_mail(
+            subject=subject,
+            message=body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[seeker.user.email],
+            fail_silently=False,
+        )
+        log = EmailLog.objects.create(
+            recruiter=request.user, seeker=seeker.user, job=job,
+            subject=subject, body=body,
+        )
+        return Response(EmailLogSerializer(log).data, status=status.HTTP_201_CREATED)
+    
 class SavedSearchListView(RecruiterContextMixin, generics.ListCreateAPIView):
     """GET and POST /api/recruiter/saved-searches/."""
 

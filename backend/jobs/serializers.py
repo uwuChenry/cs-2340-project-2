@@ -148,6 +148,7 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         skill_names = validated_data.pop("skills", [])
         recruiter = self.context["recruiter"]
+        self._maybe_geocode(validated_data)
         job = JobPosting.objects.create(
             recruiter=recruiter, company=recruiter.company, **validated_data
         )
@@ -156,6 +157,7 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         skill_names = validated_data.pop("skills", None)
+        self._maybe_geocode(validated_data, instance)
         for field, value in validated_data.items():
             setattr(instance, field, value)
         instance.save()
@@ -168,3 +170,30 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
         from profiles.skills import resolve_skills
 
         job.skills.set(resolve_skills(skill_names))
+
+    @staticmethod
+    def _maybe_geocode(validated_data, instance=None):
+        """Fill latitude/longitude from the typed address (story 18).
+
+        Only runs when the client didn't send coordinates directly (so an API
+        caller can always override) and something address-related is actually
+        part of this save (so an unrelated PATCH, like a status change, doesn't
+        re-geocode every time). Best-effort: geocode() never raises, so a
+        posting still saves if the lookup fails or times out.
+        """
+        if "latitude" in validated_data or "longitude" in validated_data:
+            return
+
+        address_fields = {"address", "city", "state"}
+        if not address_fields & validated_data.keys():
+            return
+
+        from .geocoding import geocode
+
+        address = validated_data.get("address", getattr(instance, "address", "") if instance else "")
+        city = validated_data.get("city", getattr(instance, "city", "") if instance else "")
+        state = validated_data.get("state", getattr(instance, "state", "") if instance else "")
+
+        result = geocode(address, city, state)
+        if result:
+            validated_data["latitude"], validated_data["longitude"] = result

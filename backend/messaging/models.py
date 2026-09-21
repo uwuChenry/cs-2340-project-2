@@ -69,3 +69,39 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username}: {self.body[:40]}"
+
+class EmailLog(models.Model):
+    """A record of a real email a recruiter sent a candidate (story 15).
+
+    Distinct from Message/Thread, which are in-platform chat: this is an actual
+    email dispatched through Django's mail backend. Kept as its own model rather
+    than folded into Thread/Message because it is a different channel with its
+    own subject line and delivery semantics (and no reply comes back through us).
+    """
+
+    recruiter = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="sent_candidate_emails",
+    )
+    seeker = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="received_recruiter_emails",
+    )
+    job = models.ForeignKey(
+        JobPosting,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="candidate_emails",
+    )
+    subject = models.CharField(max_length=200)
+    body = models.TextField()
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-sent_at"]
+
+    def __str__(self):
+        return f"{self.recruiter.username} -> {self.seeker.username}: {self.subject}"
