@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.core.exceptions import ValidationError
 
 from profiles.models import Company, RecruiterProfile, Skill
 
@@ -18,6 +19,7 @@ class JobPosting(models.Model):
         PUBLISHED = "published", "Published"
         CLOSED = "closed", "Closed"
 
+
     recruiter = models.ForeignKey(
         RecruiterProfile,
         on_delete=models.CASCADE,
@@ -35,10 +37,11 @@ class JobPosting(models.Model):
     team_size = models.CharField(max_length=60, blank=True, default="")
 
     address = models.CharField(max_length=250, blank=True, default="")
-    city = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, blank=True, default="")
     state = models.CharField(max_length=100, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
 
     # Stored in whole dollars. The UI shows thousands; that conversion is the
     # frontend's job so the database keeps one unambiguous unit.
@@ -67,6 +70,8 @@ class JobPosting(models.Model):
         indexes = [
             # Every seeker search filters on status first.
             models.Index(fields=["status", "-posted_at"]),
+            # Add indexing for map implementation, allows database to check matching rows quickly.
+            models.Index(fields=["status", "latitude", "longitude"]),
         ]
 
     @property
@@ -74,7 +79,10 @@ class JobPosting(models.Model):
         if self.work_arrangement == self.WorkArrangement.REMOTE:
             return "Remote (US)"
         return f"{self.city}, {self.state}".strip(", ")
-
+    def clean(self):
+        if self.work_arrangement != self.WorkArrangement.REMOTE and not self.city:
+            raise ValidationError({"city": "Hybrid and on-site roles require a city."})
+        
     def __str__(self):
         return f"{self.title} at {self.company.name}"
 

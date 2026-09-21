@@ -12,7 +12,7 @@ from rest_framework import serializers
 
 from .matching import distance_miles, is_recommended, skill_match_pct
 from .models import JobPosting
-
+from .coordinates import jobLocation
 
 class JobPostingSerializer(serializers.ModelSerializer):
     """A posting as the search list and map need it."""
@@ -103,6 +103,8 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
     text input showing "$150k - $185k", but parsing display text is a frontend
     concern -- the database keeps one unambiguous unit.
     """
+    latitude = serializers.FloatField(read_only=True)
+    longitude = serializers.FloatField(read_only=True)
 
     # Write-only: on input this is a list of names, but on output the M2M manager
     # is not iterable by ListField, so to_representation supplies the names.
@@ -152,6 +154,7 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
             recruiter=recruiter, company=recruiter.company, **validated_data
         )
         self._set_skills(job, skill_names)
+        self.coordinatesIfPublished(job)
         return job
 
     def update(self, instance, validated_data):
@@ -161,6 +164,7 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
         instance.save()
         if skill_names is not None:
             self._set_skills(instance, skill_names)
+        self.coordinatesIfPublished(instance)
         return instance
 
     @staticmethod
@@ -168,3 +172,12 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
         from profiles.skills import resolve_skills
 
         job.skills.set(resolve_skills(skill_names))
+    
+    """Gets the coordinates of a job if the job is published and the coordinates are not already there"""
+    @staticmethod
+    def coordinatesIfPublished(job):
+        if job.status == JobPosting.Status.PUBLISHED and job.latitude is None:
+            coordinates = jobLocation(job)
+            if coordinates is not None:
+                job.latitude, job.longitude = coordinates
+                job.save()
