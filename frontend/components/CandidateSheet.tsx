@@ -14,6 +14,7 @@ import Sheet, { SheetCloseButton } from "./ui/Sheet";
 
 export default function CandidateSheet() {
   const { openCand, closeCandidate, msgOpen, setMsgOpen, showToast, bumpData } = useAppState();
+  const [emailOpen, setEmailOpen] = useState(false);
 
   const detail = useAsync(
     () =>
@@ -64,7 +65,7 @@ export default function CandidateSheet() {
   }
 
   function emailCandidate() {
-    if (cand?.email) window.location.href = `mailto:${cand.email}`;
+    if (cand?.email) setEmailOpen((open) => !open);
     else showToast(`${firstName} keeps their email private`);
   }
 
@@ -103,7 +104,7 @@ export default function CandidateSheet() {
             {msgOpen ? "Hide messages" : "Message in platform"}
           </Button>
           <Button variant="secondary" size="md" className="!rounded-lg" onClick={emailCandidate}>
-            Email candidate
+            {emailOpen ? "Hide email" : "Email candidate"}
           </Button>
           {isApplication && (
             <Button variant="secondary" size="md" className="!rounded-lg" onClick={advanceStage} disabled={!canAdvance}>
@@ -166,9 +167,81 @@ export default function CandidateSheet() {
           </div>
         )}
 
+        {emailOpen && cand.email && (
+          <EmailComposer
+            key={`email-${cand.kind}-${cand.id}`}
+            cand={cand}
+            firstName={firstName}
+            onSent={() => setEmailOpen(false)}
+          />
+        )}
+
         {msgOpen && <MessageThread key={`${cand.kind}-${cand.id}`} cand={cand} firstName={firstName} />}
       </div>
     </Sheet>
+  );
+}
+
+// Sends a real email through the platform (story 15) -- distinct from the
+// in-platform message thread below, which stays inside the app. Only rendered
+// when the seeker has opted in to show_contact; the backend enforces the same
+// check independently.
+function EmailComposer({ cand, firstName, onSent }: { cand: CandidateDetail; firstName: string; onSent: () => void }) {
+  const { showToast } = useAppState();
+  const [subject, setSubject] = useState(`Reaching out from ${cand.role || "our team"}`);
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+
+  async function send() {
+    const trimmedSubject = subject.trim();
+    const trimmedBody = body.trim();
+    if (!trimmedSubject || !trimmedBody || sending) return;
+    setSending(true);
+    try {
+      await http.post(`/api/recruiter/candidates/${cand.seekerId}/email/`, {
+        subject: trimmedSubject,
+        body: trimmedBody,
+        job: cand.jobId ? Number(cand.jobId) : undefined,
+      });
+      showToast(`Email sent to ${firstName}`);
+      onSent();
+    } catch (e) {
+      showToast(messageOf(e));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="border-t border-line-soft pt-5 mb-5">
+      <h3 className="m-0 mb-2.5 text-sm font-semibold">Email {firstName}</h3>
+      <div className="flex flex-col gap-2">
+        <input
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          placeholder="Subject"
+          className="px-3 py-2.5 border border-line-strong rounded-lg bg-surface-sunken text-[13.5px] focus:outline-none focus:border-accent"
+        />
+        <textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          rows={4}
+          placeholder={`Write a message to ${firstName}…`}
+          className="px-3 py-2.5 border border-line-strong rounded-lg bg-surface-sunken text-[13.5px] leading-[1.5] focus:outline-none focus:border-accent resize-none"
+        />
+        <div className="flex justify-end">
+          <Button
+            variant="accent"
+            size="md"
+            className="!rounded-lg"
+            onClick={send}
+            disabled={sending || !subject.trim() || !body.trim()}
+          >
+            Send email
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 

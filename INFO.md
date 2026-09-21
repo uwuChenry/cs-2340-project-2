@@ -95,10 +95,10 @@ Optional env vars: `NEXT_PUBLIC_API_URL` (browser → API origin), `API_URL` (se
 | 12 | Search candidates by skills, location, projects | ✅ | `/recruiter/candidates`; `GET /api/recruiter/candidates/` | Skills are AND. Only people **open to work**, or who applied to you, are visible. `radius` exists in the API but not the UI. Unpaginated. |
 | 13 | Applicant pipeline (Kanban) | 🟡 | `/recruiter/pipeline` | Five columns per opening. Move a card with **Advance to …** in the candidate sheet (forward one step). **No drag-and-drop.** |
 | 14 | Message candidates in the platform | 🟡 | Candidate sheet → thread; `/api/threads/…` | Recruiter → candidate works and persists. **Seekers have no inbox/UI to read or reply** (API supports both sides). `read_at` unused. |
-| 15 | Email candidates through the platform | ❌ | — | Only a `mailto:` shortcut when the candidate shares their email. No email sending / backend configured. |
+| 15 | Email candidates through the platform | ✅ | Candidate sheet → **Email candidate**; `POST /api/recruiter/candidates/<id>/email/` | Sends via Django's mail backend (console by default; point `EMAIL_HOST`/etc at real SMTP via env vars) and logs to `messaging.EmailLog`. Refused (403) if the candidate hasn't opted in to `show_contact`. |
 | 16 | Save a candidate search + get notified | 🟡 | Candidates page; `/api/recruiter/saved-searches/…` | Save, re-run, alerts toggle, "new matches" count. **Nothing is actually sent.** The count = new *accounts* since you last opened it that match skills/location (ignores the project keyword). |
 | 17 | Candidate recommendations for my postings | 🟡 | Candidates page banner | Results are ranked by skill overlap with the selected opening. No dedicated feed or notifications. |
-| 18 | Pin my office on a map | ❌ | — | Address is free text. The model/API accept lat/long but there is **no geocoding or map picker**, so new roles have no coordinates. |
+| 18 | Pin my office on a map | ✅ | `/recruiter/post`; `RecruiterJobSerializer.create`/`update` | Address is geocoded automatically via OpenStreetMap's Nominatim (`jobs/geocoding.py`) on save, best-effort -- a failed/slow lookup never blocks saving the posting. New roles now show up pinned on the map. |
 | 19 | Clusters of applicants by location | 🟡 | `GET /api/recruiter/jobs/<id>/clusters/`; bubbles on the candidates page | Grouped by location text with coordinates rounded to ~1 mile. Drawn on the placeholder map, not real clustering. |
 | 20 | Review a candidate's profile + application together | ✅ | Candidate sheet | Note, stage, salary/notice, matched/missing skills, experience. Email/current employer respect privacy. The sheet doesn't show projects/links/education yet (API returns projects). |
 
@@ -108,7 +108,7 @@ Optional env vars: `NEXT_PUBLIC_API_URL` (browser → API origin), `API_URL` (se
 |---|---|---|---|---|
 | 21 | Manage users and roles | 🟡 | Django admin `/admin/` (User, Profile.role, SeekerProfile, RecruiterProfile, Company, Skill) | **No custom admin UI.** Deactivate a user with Django's `is_active`. |
 | 22 | Moderate / remove job posts | 🟡 | Django admin → Job postings (edit status, delete) | No report-driven workflow. |
-| 23 | Export data as CSV | ❌ | — | Nothing implemented. (Django admin actions would be the quickest route.) |
+| 23 | Export data as CSV | ✅ | Django admin -> any list view (Job postings, Applications, Seeker profiles, Profiles, Reports, Email logs) -> **Export selected to CSV** action | `moderation.admin_utils.CSVExportMixin`; exported columns come from each admin's `list_display`. |
 | 24 | Review reports about users / postings | 🟡 | `moderation.Report` model, registered in Django admin | **Model only.** There is no endpoint or button for a user to *file* a report. Admins can create/review them by hand. |
 
 ## 4. Things we decided (and why)

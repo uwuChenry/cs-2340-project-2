@@ -19,6 +19,7 @@ urlpatterns = [
 
     path("candidates/", profile_views.CandidateSearchView.as_view(), name="recruiter-candidate-search"),
     path("candidates/<int:pk>/", profile_views.SeekerDetailView.as_view(), name="recruiter-seeker-detail"),
+    path("candidates/<int:pk>/email/", profile_views.EmailCandidateView.as_view(), name="recruiter-candidate-email"),
 
     path("saved-searches/", profile_views.SavedSearchListView.as_view(), name="saved-search-list"),
     path("saved-searches/<int:pk>/", profile_views.SavedSearchDetailView.as_view(), name="saved-search-detail"),
