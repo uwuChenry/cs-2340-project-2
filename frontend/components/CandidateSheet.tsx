@@ -11,10 +11,12 @@ import { Avatar } from "./ui/Avatar";
 import Button from "./ui/Button";
 import Notice from "./ui/Notice";
 import Sheet, { SheetCloseButton } from "./ui/Sheet";
+import ReportDialog from "./ReportDialog";
 
 export default function CandidateSheet() {
   const { openCand, closeCandidate, msgOpen, setMsgOpen, showToast, bumpData } = useAppState();
   const [emailOpen, setEmailOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const detail = useAsync(
     () =>
@@ -111,7 +113,18 @@ export default function CandidateSheet() {
               {canAdvance ? `Advance to ${STAGES[stageIndex + 1]}` : "Final stage"}
             </Button>
           )}
+          <Button variant="link" size="sm" className="ml-auto" onClick={() => setReportOpen(true)}>
+            Report profile
+          </Button>
         </div>
+
+        {reportOpen && (
+          <ReportDialog
+            target={{ kind: "user", id: cand.seekerId, label: "this profile" }}
+            onClose={() => setReportOpen(false)}
+            onSubmitted={() => { setReportOpen(false); closeCandidate(); }}
+          />
+        )}
 
         {cand.note && (
           <div className="bg-surface-sunken border border-line rounded-[11px] px-4 py-[15px] mb-5">
