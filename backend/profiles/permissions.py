@@ -1,8 +1,20 @@
-"""Role-based access for the recruiter half of the platform."""
+"""Role-based access for the recruiter and administrator halves of the platform."""
 
 from rest_framework.permissions import BasePermission
 
 from .models import Profile, RecruiterProfile
+
+
+class IsAdmin(BasePermission):
+    """Allows only signed-in users whose account role is administrator."""
+
+    message = "This account is not an administrator account."
+
+    def has_permission(self, request, view):
+        if not request.user.is_authenticated:
+            return False
+        profile = Profile.objects.filter(user=request.user).first()
+        return bool(profile and profile.role == Profile.Role.ADMIN)
 
 
 class IsRecruiter(BasePermission):

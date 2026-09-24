@@ -25,8 +25,8 @@ export default function UserMenu({ user, onSignOut }: { user: ApiSessionUser; on
   const trigger = useRef<HTMLButtonElement>(null);
   const menu = useRef<HTMLDivElement>(null);
 
-  // Administrators have no profile page of their own.
   const profileHref = user.role === "recruiter" ? "/recruiter/profile" : user.role === "job_seeker" ? "/profile" : null;
+  const adminHref = user.role === "admin" ? "/admin" : null;
 
   useEffect(() => {
     if (!open) return;
@@ -92,6 +92,11 @@ export default function UserMenu({ user, onSignOut }: { user: ApiSessionUser; on
           </div>
 
           <div className="py-1.5">
+            {adminHref && (
+              <Link href={adminHref} role="menuitem" onClick={close} className={itemClass}>
+                Admin dashboard
+              </Link>
+            )}
             {profileHref && (
               <Link href={profileHref} role="menuitem" onClick={close} className={itemClass}>
                 View profile
