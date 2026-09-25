@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Message, Thread
+from moderation.admin_utils import CSVExportMixin
+
+from .models import EmailLog, Message, Thread
 
 
 class MessageInline(admin.TabularInline):
@@ -17,3 +19,12 @@ class ThreadAdmin(admin.ModelAdmin):
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
     list_display = ("thread", "sender", "sent_at", "read_at")
+
+
+@admin.register(EmailLog)
+class EmailLogAdmin(CSVExportMixin, admin.ModelAdmin):
+    """Real emails sent to candidates through the platform (story 15)."""
+
+    list_display = ("recruiter", "seeker", "job", "subject", "sent_at")
+    list_filter = ("job",)
+    search_fields = ("subject", "recruiter__username", "seeker__username")

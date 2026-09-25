@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { http } from "@/lib/api";
 import type { ApiJob } from "@/lib/apiTypes";
 import { toJob } from "@/lib/adapters";
@@ -14,6 +15,7 @@ import Chip from "./ui/Chip";
 import Notice from "./ui/Notice";
 import Sheet, { SheetCloseButton } from "./ui/Sheet";
 import { SingleLocationMap } from "./SchematicMap";
+import ReportDialog from "./ReportDialog";
 
 export default function JobSheet() {
   const {
@@ -31,6 +33,7 @@ export default function JobSheet() {
     submitNote,
   } = useAppState();
   const { user } = useAuth();
+  const [reportOpen, setReportOpen] = useState(false);
 
   // The list view already has most of this, but the sheet needs the fields only
   // the detail endpoint returns (which required skills the seeker has).
@@ -144,6 +147,14 @@ export default function JobSheet() {
             Application sent. Tracked under Applications as <strong>Applied</strong>.
           </div>
         )}
+
+        {user && reportOpen && (
+          <ReportDialog
+            target={{ kind: "job", id: job.id, label: "this job" }}
+            onClose={() => setReportOpen(false)}
+            onSubmitted={() => { setReportOpen(false); closeJob(); }}
+          />
+        )}
       </div>
 
       <div className="px-7 pb-[34px]">
@@ -178,6 +189,11 @@ export default function JobSheet() {
 
         <h3 className="m-0 mb-[9px] text-sm font-semibold">Where it is</h3>
         <SingleLocationMap address={job.address} height={170} />
+        {user && (
+          <Button variant="link" className="mt-4" onClick={() => setReportOpen(true)}>
+            Report this job
+          </Button>
+        )}
       </div>
     </Sheet>
   );

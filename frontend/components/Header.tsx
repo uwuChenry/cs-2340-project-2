@@ -36,7 +36,15 @@ export default function Header() {
   // Signed-out visitors (and anyone while the session is still being checked) see
   // only search. The rest of the tabs belong to a signed-in role, and profile and
   // account links live in the avatar menu.
-  const tabs = !ready || !user ? [searchTab] : user.role === "recruiter" ? recruiterTabs : user.role === "job_seeker" ? seekerTabs : [searchTab];
+  const tabs = !ready || !user
+    ? [searchTab]
+    : user.role === "admin"
+      ? [{ href: "/admin", label: "Admin" }]
+      : user.role === "recruiter"
+        ? recruiterTabs
+        : user.role === "job_seeker"
+          ? seekerTabs
+          : [searchTab];
 
   async function signOut() {
     try {

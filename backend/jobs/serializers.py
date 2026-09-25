@@ -150,6 +150,7 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         skill_names = validated_data.pop("skills", [])
         recruiter = self.context["recruiter"]
+        self._maybe_geocode(validated_data)
         job = JobPosting.objects.create(
             recruiter=recruiter, company=recruiter.company, **validated_data
         )

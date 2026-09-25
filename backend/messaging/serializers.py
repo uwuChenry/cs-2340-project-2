@@ -2,8 +2,7 @@
 
 from rest_framework import serializers
 
-from .models import Message, Thread
-
+from .models import EmailLog, Message, Thread
 
 class MessageSerializer(serializers.ModelSerializer):
     """One bubble in a thread.
@@ -53,3 +52,12 @@ class ThreadSerializer(serializers.ModelSerializer):
     def get_lastMessageAt(self, thread):
         last = thread.messages.last()
         return last.sent_at if last else None
+
+class EmailLogSerializer(serializers.ModelSerializer):
+    """Confirmation payload after a recruiter emails a candidate (story 15)."""
+
+    sentAt = serializers.DateTimeField(source="sent_at", read_only=True)
+
+    class Meta:
+        model = EmailLog
+        fields = ["id", "subject", "body", "sentAt"]

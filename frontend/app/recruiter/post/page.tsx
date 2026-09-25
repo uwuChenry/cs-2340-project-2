@@ -235,8 +235,7 @@ function PostRole() {
           <Card padding="none" className="p-[18px]">
             <h2 className="m-0 mb-1 text-[15px] font-semibold">Office location</h2>
             <p className="m-0 mb-3.5 text-[13px] text-muted leading-[1.5]">
-              Candidates see this address on the role. When you publish, it&rsquo;s placed on the job search map
-              automatically. Use a full street address for an exact pin.
+              Candidates see this address on the role. The pin is placed automatically from the address you type below.
             </p>
             <SingleLocationMap address={form.address.split(",")[0] || "Add an address"} height={230} />
             <TextInput
