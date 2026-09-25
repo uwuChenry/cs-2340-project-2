@@ -159,8 +159,12 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         skill_names = validated_data.pop("skills", None)
+        locationBefore = self.locationKey(instance)
         for field, value in validated_data.items():
             setattr(instance, field, value)
+        if self.locationKey(instance) != locationBefore:
+            instance.latitude = None
+            instance.longitude = None
         instance.save()
         if skill_names is not None:
             self._set_skills(instance, skill_names)
@@ -173,11 +177,15 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
 
         job.skills.set(resolve_skills(skill_names))
     
-    """Gets the coordinates of a job if the job is published and the coordinates are not already there"""
+    @staticmethod
+    def _location_key(job):
+        return (job.address, job.city, job.state, job.work_arrangement)
+
     @staticmethod
     def coordinatesIfPublished(job):
+        """Gets the coordinates of a job if the job is published and the coordinates are not already there"""
         if job.status == JobPosting.Status.PUBLISHED and job.latitude is None:
             coordinates = jobLocation(job)
             if coordinates is not None:
                 job.latitude, job.longitude = coordinates
-                job.save()
+                job.save(update_fields=["latitude", "longitude"])

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { http, messageOf } from "@/lib/api";
 import type { ApiJob, ApiPage } from "@/lib/apiTypes";
@@ -24,7 +25,12 @@ import Card from "@/components/ui/Card";
 import Chip from "@/components/ui/Chip";
 import { Label, RangeInput, TextInput } from "@/components/ui/Field";
 import Notice from "@/components/ui/Notice";
-import { JobsMapPanel } from "@/components/SchematicMap";
+
+// Leaflet touches `window` on import, so the map is only loaded in the browser.
+const JobsLeafletMap = dynamic(() => import("@/components/JobsLeafletMap"), {
+  ssr: false,
+  loading: () => <div className="h-[520px] bg-map-ground border border-line rounded-xl" />,
+});
 
 const viewModes: { id: ViewMode; label: string }[] = [
   { id: "list", label: "List" },
@@ -274,7 +280,7 @@ export default function SearchPage() {
 
         {showMap && (
           <div className="flex-[2_1_340px] min-w-0">
-            <JobsMapPanel jobs={jobs} radius={filters.radius} onPinClick={(id) => openJob(id)} />
+            <JobsLeafletMap jobs={jobs} onOpenJob={openJob} />
           </div>
         )}
       </div>
