@@ -150,26 +150,28 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         skill_names = validated_data.pop("skills", [])
         recruiter = self.context["recruiter"]
-        self._maybe_geocode(validated_data)
         job = JobPosting.objects.create(
             recruiter=recruiter, company=recruiter.company, **validated_data
         )
         self._set_skills(job, skill_names)
-        self.coordinatesIfPublished(job)
+        self.fillCoordinates(job)
         return job
 
     def update(self, instance, validated_data):
         skill_names = validated_data.pop("skills", None)
-        locationBefore = self.locationKey(instance)
+        locationBefore = self._location_key(instance)
         for field, value in validated_data.items():
             setattr(instance, field, value)
-        if self.locationKey(instance) != locationBefore:
+        # A moved office needs a new pin, so the old one is dropped and looked up
+        # again below. Saves that don't touch the location keep their pin and
+        # never hit the geocoder.
+        if self._location_key(instance) != locationBefore:
             instance.latitude = None
             instance.longitude = None
         instance.save()
         if skill_names is not None:
             self._set_skills(instance, skill_names)
-        self.coordinatesIfPublished(instance)
+        self.fillCoordinates(instance)
         return instance
 
     @staticmethod
@@ -177,16 +179,23 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
         from profiles.skills import resolve_skills
 
         job.skills.set(resolve_skills(skill_names))
-    
+
     @staticmethod
     def _location_key(job):
         return (job.address, job.city, job.state, job.work_arrangement)
 
     @staticmethod
-    def coordinatesIfPublished(job):
-        """Gets the coordinates of a job if the job is published and the coordinates are not already there"""
-        if job.status == JobPosting.Status.PUBLISHED and job.latitude is None:
-            coordinates = jobLocation(job)
-            if coordinates is not None:
-                job.latitude, job.longitude = coordinates
-                job.save(update_fields=["latitude", "longitude"])
+    def fillCoordinates(job):
+        """Pins the recruiter's office from its typed address (story 18) so the
+        role shows up on the job search map (story 7).
+
+        Runs for drafts too, so the pin is ready by the time the role is
+        published, and retries on a later save if an earlier lookup failed.
+        Best-effort: a failed or remote lookup just leaves the job pinless.
+        """
+        if job.latitude is not None:
+            return
+        coordinates = jobLocation(job)
+        if coordinates is not None:
+            job.latitude, job.longitude = coordinates
+            job.save(update_fields=["latitude", "longitude"])

@@ -35,7 +35,7 @@ def geocode(address: str, city: str, state: str) -> tuple[float, float] | None:
     if not query:
         return None
 
-    params = urllib.parse.urlencode({"q": query, "format": "json", "limit": 1})
+    params = urllib.parse.urlencode({"q": query, "format": "json", "limit": 1, "countrycodes": "us"})
     request = urllib.request.Request(
         f"{NOMINATIM_URL}?{params}",
         headers={"User-Agent": USER_AGENT},
