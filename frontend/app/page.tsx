@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import Card from "@/components/ui/Card";
+import { CountUp, FadeUp, Reveal } from "@/components/motion";
 import { skillFilterOptions } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -28,10 +29,10 @@ async function loadStats() {
   try {
     const [open, remote, visa] = await Promise.all([countJobs(""), countJobs("setup=remote"), countJobs("visa=true")]);
     return [
-      { value: `${open}`, label: "Open roles listed" },
-      { value: `${remote}`, label: "Fully remote" },
-      { value: `${visa}`, label: "Offer visa sponsorship" },
-      { value: `${skillFilterOptions.length}`, label: "Skill filters" },
+      { value: open, label: "Open roles listed" },
+      { value: remote, label: "Fully remote" },
+      { value: visa, label: "Offer visa sponsorship" },
+      { value: skillFilterOptions.length, label: "Skill filters" },
     ];
   } catch {
     return null;
@@ -121,7 +122,7 @@ function StepList({ steps }: { steps: { title: string; body: string }[] }) {
   return (
     <ol className="m-0 p-0 list-none flex flex-col gap-5">
       {steps.map((step, i) => (
-        <li key={step.title} className="flex gap-3.5">
+        <Reveal as="li" key={step.title} delay={i * 0.08} className="flex gap-3.5">
           <span className="shrink-0 w-[26px] h-[26px] rounded-lg bg-surface-tint border border-line grid place-items-center font-mono text-[12px] text-ink-3">
             {i + 1}
           </span>
@@ -129,7 +130,7 @@ function StepList({ steps }: { steps: { title: string; body: string }[] }) {
             <div className="text-[15px] font-semibold tracking-[-0.01em] mb-1">{step.title}</div>
             <p className="m-0 text-[14px] leading-[1.6] text-muted">{step.body}</p>
           </div>
-        </li>
+        </Reveal>
       ))}
     </ol>
   );
@@ -142,38 +143,48 @@ export default async function Home() {
     <div className="flex flex-col gap-[72px] pb-4">
       {/* Hero */}
       <section className="pt-6">
-        <Eyebrow>Roster · job marketplace</Eyebrow>
-        <h1 className="m-0 max-w-[760px] text-[38px] sm:text-[46px] leading-[1.08] font-semibold tracking-[-0.03em]">
-          The job search should start with what you can do.
-        </h1>
-        <p className="mt-5 mb-0 max-w-[620px] text-[17px] leading-[1.65] text-muted">
-          Roster matches people to openings by skill, salary and distance — then keeps the whole thing in one place, from
-          the first search to the offer. No endless tabs, no reposted listings, no guessing where your application went.
-        </p>
+        <FadeUp>
+          <Eyebrow>Roster · job marketplace</Eyebrow>
+        </FadeUp>
+        <FadeUp delay={0.06}>
+          <h1 className="m-0 max-w-[760px] text-[38px] sm:text-[46px] leading-[1.08] font-semibold tracking-[-0.03em]">
+            The job search should start with what you can do.
+          </h1>
+        </FadeUp>
+        <FadeUp delay={0.14}>
+          <p className="mt-5 mb-0 max-w-[620px] text-[17px] leading-[1.65] text-muted">
+            Roster matches people to openings by skill, salary and distance — then keeps the whole thing in one place, from
+            the first search to the offer. No endless tabs, no reposted listings, no guessing where your application went.
+          </p>
+        </FadeUp>
 
-        <div className="mt-7 flex flex-wrap gap-2.5">
+        <FadeUp delay={0.22} className="mt-7 flex flex-wrap gap-2.5">
           <Link href="/search" className={primaryLink}>
             Browse open roles
           </Link>
           <Link href="/recruiter/post" className={secondaryLink}>
             I&rsquo;m hiring
           </Link>
-        </div>
+        </FadeUp>
 
         {stats && (
-          <dl className="m-0 mt-10 pt-7 border-t border-line grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
-            {stats.map((stat) => (
-              <div key={stat.label} className="flex flex-col">
-                <dt className="order-2 mt-2 text-[13px] text-muted-2">{stat.label}</dt>
-                <dd className="order-1 m-0 text-[28px] font-semibold tracking-[-0.03em] leading-none">{stat.value}</dd>
-              </div>
-            ))}
-          </dl>
+          <FadeUp delay={0.3}>
+            <dl className="m-0 mt-10 pt-7 border-t border-line grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
+              {stats.map((stat) => (
+                <div key={stat.label} className="flex flex-col">
+                  <dt className="order-2 mt-2 text-[13px] text-muted-2">{stat.label}</dt>
+                  <dd className="order-1 m-0 text-[28px] font-semibold tracking-[-0.03em] leading-none tabular-nums">
+                    <CountUp to={stat.value} />
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </FadeUp>
         )}
       </section>
 
       {/* What this is */}
-      <section>
+      <Reveal as="section">
         <Eyebrow>What this is</Eyebrow>
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           <div className="flex-[1_1_420px] min-w-0 max-w-[620px]">
@@ -205,7 +216,7 @@ export default async function Home() {
             </ul>
           </Card>
         </div>
-      </section>
+      </Reveal>
 
       {/* How it works */}
       <section>
@@ -243,17 +254,19 @@ export default async function Home() {
           The parts that save you the most time
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
-          {features.map((feature) => (
-            <Card key={feature.title}>
-              <div className="text-[15px] font-semibold tracking-[-0.01em] mb-2">{feature.title}</div>
-              <p className="m-0 text-[14px] leading-[1.6] text-muted">{feature.body}</p>
-            </Card>
+          {features.map((feature, i) => (
+            <Reveal key={feature.title} delay={(i % 3) * 0.08}>
+              <Card className="h-full hover:border-line-hover">
+                <div className="text-[15px] font-semibold tracking-[-0.01em] mb-2">{feature.title}</div>
+                <p className="m-0 text-[14px] leading-[1.6] text-muted">{feature.body}</p>
+              </Card>
+            </Reveal>
           ))}
         </div>
       </section>
 
       {/* Closing */}
-      <section className="rounded-xl border border-line bg-surface-sunken px-7 py-10 text-center">
+      <Reveal as="section" className="rounded-xl border border-line bg-surface-sunken px-7 py-10 text-center">
         <h2 className="m-0 text-[24px] font-semibold tracking-[-0.025em]">{openRoles ? `${openRoles} roles are open right now` : "Roles are open right now"}</h2>
         <p className="mt-3 mb-0 mx-auto max-w-[480px] text-[15px] leading-[1.65] text-muted">
           Set your filters once and see which of them match your skills, your range and your commute.
@@ -266,7 +279,7 @@ export default async function Home() {
             Set up your profile
           </Link>
         </div>
-      </section>
+      </Reveal>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "motion/react";
 import { http } from "@/lib/api";
 import type { ApiPipeline } from "@/lib/apiTypes";
 import { timeAgo, toPipelineCard } from "@/lib/adapters";
@@ -12,6 +13,7 @@ import Guard from "@/components/Guard";
 import RoleSelect from "@/components/RoleSelect";
 import { Avatar } from "@/components/ui/Avatar";
 import Notice from "@/components/ui/Notice";
+import { spring } from "@/components/motion";
 
 export default function PipelinePage() {
   return (
@@ -72,11 +74,17 @@ function Pipeline() {
                 <span className="font-mono text-xs text-muted-2">{col.cards.length}</span>
               </div>
               <div className="flex flex-col gap-2">
-                {col.cards.map((c) => (
-                  <button
+                {col.cards.map((c, i) => (
+                  // layoutId lets a card glide into its new column when its stage changes.
+                  <motion.button
                     key={c.id}
+                    layoutId={`pipeline-card-${c.id}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ ...spring, delay: Math.min(i, 6) * 0.04 }}
+                    whileHover={{ y: -2 }}
                     onClick={() => openCandidate({ kind: "application", id: c.id })}
-                    className="text-left w-full bg-surface border border-line rounded-[9px] px-3 py-[11px] cursor-pointer hover:border-line-hover"
+                    className="text-left w-full bg-surface border border-line rounded-[9px] px-3 py-[11px] cursor-pointer hover:border-line-hover hover:shadow-[0_4px_14px_rgba(26,25,23,0.06)]"
                   >
                     <div className="flex items-center gap-2 mb-[7px]">
                       <Avatar initials={c.initials} size={22} fontSize={10} />
@@ -89,7 +97,7 @@ function Pipeline() {
                       </span>
                       <span className="text-[11.5px] text-muted-3">{timeAgo(c.appliedAt)}</span>
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
             </div>

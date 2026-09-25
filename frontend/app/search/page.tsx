@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
 import { http, messageOf } from "@/lib/api";
 import type { ApiJob, ApiPage } from "@/lib/apiTypes";
 import { toJob } from "@/lib/adapters";
@@ -25,6 +26,7 @@ import Chip from "@/components/ui/Chip";
 import { Label, RangeInput, TextInput } from "@/components/ui/Field";
 import Notice from "@/components/ui/Notice";
 import { JobsMapPanel } from "@/components/SchematicMap";
+import { easeOut, spring } from "@/components/motion";
 
 const viewModes: { id: ViewMode; label: string }[] = [
   { id: "list", label: "List" },
@@ -116,11 +118,14 @@ export default function SearchPage() {
             <button
               key={m.id}
               onClick={() => setView(m.id)}
-              className={`px-3 py-1.5 rounded-[7px] text-[13px] font-medium cursor-pointer border-0 ${
-                view === m.id ? "bg-surface text-ink" : "bg-transparent text-muted"
+              className={`relative px-3 py-1.5 rounded-[7px] text-[13px] font-medium cursor-pointer border-0 bg-transparent transition-colors duration-150 ${
+                view === m.id ? "text-ink" : "text-muted"
               }`}
             >
-              {m.label}
+              {view === m.id && (
+                <motion.span layoutId="view-mode-pill" transition={spring} className="absolute inset-0 z-0 rounded-[7px] bg-surface" />
+              )}
+              <span className="relative z-10">{m.label}</span>
             </button>
           ))}
         </div>
@@ -177,17 +182,18 @@ export default function SearchPage() {
             <Label>Work setup</Label>
             <div className="flex gap-1.5 mb-4">
               {setupOptions.map((o) => (
-                <button
+                <motion.button
                   key={o.id}
                   onClick={() => setFilter("setup", o.id)}
-                  className={`flex-1 rounded-lg py-[7px] px-1 text-[12.5px] cursor-pointer border ${
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex-1 rounded-lg py-[7px] px-1 text-[12.5px] cursor-pointer border transition-colors duration-150 ${
                     filters.setup === o.id
                       ? "bg-accent-tint text-accent border-accent-border"
                       : "bg-surface text-ink-3 border-line-strong"
                   }`}
                 >
                   {o.label}
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -249,17 +255,28 @@ export default function SearchPage() {
 
             {first.data && jobs.length === 0 && <Notice>No roles match these filters. Try widening the radius or clearing a skill.</Notice>}
 
-            {sorted.map((job) => (
-              <JobCard
-                key={job.id}
-                job={job}
-                inCart={cart.includes(job.id)}
-                isApplied={!!applied[job.id]}
-                onToggleCart={() => toggleCart(job)}
-                onApply={() => applyJob(job.id)}
-                onOpen={() => openJob(job.id)}
-              />
-            ))}
+            {/* Cards stagger in, removed ones fade out and the rest slide up to fill the gap. */}
+            <AnimatePresence mode="popLayout" initial={true}>
+              {sorted.map((job, i) => (
+                <motion.div
+                  key={job.id}
+                  layout="position"
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0, transition: { duration: 0.4, ease: easeOut, delay: Math.min(i, 8) * 0.05 } }}
+                  exit={{ opacity: 0, scale: 0.97, transition: { duration: 0.15 } }}
+                  transition={spring}
+                >
+                  <JobCard
+                    job={job}
+                    inCart={cart.includes(job.id)}
+                    isApplied={!!applied[job.id]}
+                    onToggleCart={() => toggleCart(job)}
+                    onApply={() => applyJob(job.id)}
+                    onOpen={() => openJob(job.id)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {hasMore && (
               <div className="flex flex-col items-center gap-2 pt-1">
@@ -301,9 +318,11 @@ function JobCard({
   const isRec = job.recommended;
 
   return (
-    <article
+    <motion.article
       onClick={onOpen}
-      className={`bg-surface border rounded-xl px-[18px] py-4 cursor-pointer flex flex-wrap gap-x-4 gap-y-3.5 hover:border-line-hover ${
+      whileHover={{ y: -2 }}
+      transition={spring}
+      className={`bg-surface border rounded-xl px-[18px] py-4 cursor-pointer flex flex-wrap gap-x-4 gap-y-3.5 transition-[border-color,box-shadow] duration-150 hover:border-line-hover hover:shadow-[0_6px_20px_rgba(26,25,23,0.06)] ${
         isApplied ? "border-success-border" : "border-line"
       }`}
     >
@@ -356,6 +375,6 @@ function JobCard({
           </Button>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

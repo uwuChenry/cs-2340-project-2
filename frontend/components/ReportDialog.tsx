@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import { http, messageOf } from "@/lib/api";
 import { TextArea } from "./ui/Field";
 import Button from "./ui/Button";
 import Notice from "./ui/Notice";
+import { snappy } from "./motion";
 
 type Props = {
   target: { kind: "job" | "user"; id: string; label: string };
@@ -40,8 +42,23 @@ export default function ReportDialog({ target, onClose, onSubmitted }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="report-title">
-      <div className="w-full max-w-[480px] bg-surface border border-line rounded-xl shadow-xl p-6">
+    <motion.div
+      className="fixed inset-0 z-50 bg-black/35 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="report-title"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+    >
+      <motion.div
+        className="w-full max-w-[480px] bg-surface border border-line rounded-xl shadow-xl p-6"
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.97, y: 6 }}
+        transition={snappy}
+      >
         <h2 id="report-title" className="m-0 mb-2 text-lg font-semibold">Report {target.label}</h2>
         <p className="m-0 mb-5 text-[13.5px] leading-[1.5] text-muted">
           Tell the administrator what needs attention. Your report will be reviewed privately.
@@ -69,7 +86,7 @@ export default function ReportDialog({ target, onClose, onSubmitted }: Props) {
           <Button onClick={onClose} disabled={sending}>Cancel</Button>
           <Button variant="accent" onClick={submit} disabled={sending}>{sending ? "Submitting…" : "Submit report"}</Button>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence } from "motion/react";
 import { http, messageOf } from "@/lib/api";
 import type { ApiCandidateDetail, ApiMessage, ApiSeekerDetail, ApiThread } from "@/lib/apiTypes";
 import { applicationToDetail, seekerToDetail, timeAgo } from "@/lib/adapters";
-import { STAGES, STAGE_STATUSES, type CandidateDetail } from "@/lib/types";
+import { STAGES, STAGE_STATUSES, type CandidateDetail, type CandidateRef } from "@/lib/types";
 import { useAsync } from "@/lib/useAsync";
 import { useAppState } from "@/state/AppState";
 import { Avatar } from "./ui/Avatar";
@@ -14,20 +15,26 @@ import Sheet, { SheetCloseButton } from "./ui/Sheet";
 import ReportDialog from "./ReportDialog";
 
 export default function CandidateSheet() {
-  const { openCand, closeCandidate, msgOpen, setMsgOpen, showToast, bumpData } = useAppState();
+  const { openCand } = useAppState();
+  // The ref is passed down so the panel keeps showing this candidate while it
+  // slides out, after openCand has already been cleared.
+  return (
+    <AnimatePresence>{openCand && <CandidateSheetPanel key="candidate-sheet" openCand={openCand} />}</AnimatePresence>
+  );
+}
+
+function CandidateSheetPanel({ openCand }: { openCand: CandidateRef }) {
+  const { closeCandidate, msgOpen, setMsgOpen, showToast, bumpData } = useAppState();
   const [emailOpen, setEmailOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
 
   const detail = useAsync(
     () =>
-      openCand?.kind === "application"
+      openCand.kind === "application"
         ? http.get<ApiCandidateDetail>(`/api/recruiter/applications/${openCand.id}/`).then(applicationToDetail)
-        : http.get<ApiSeekerDetail>(`/api/recruiter/candidates/${openCand?.id}/`).then(seekerToDetail),
-    [openCand?.kind ?? null, openCand?.id ?? null],
-    openCand !== null,
+        : http.get<ApiSeekerDetail>(`/api/recruiter/candidates/${openCand.id}/`).then(seekerToDetail),
+    [openCand.kind, openCand.id],
   );
-
-  if (!openCand) return null;
 
   const cand = detail.data && detail.data.kind === openCand.kind && detail.data.id === openCand.id ? detail.data : null;
 
@@ -118,13 +125,15 @@ export default function CandidateSheet() {
           </Button>
         </div>
 
-        {reportOpen && (
-          <ReportDialog
-            target={{ kind: "user", id: cand.seekerId, label: "this profile" }}
-            onClose={() => setReportOpen(false)}
-            onSubmitted={() => { setReportOpen(false); closeCandidate(); }}
-          />
-        )}
+        <AnimatePresence>
+          {reportOpen && (
+            <ReportDialog
+              target={{ kind: "user", id: cand.seekerId, label: "this profile" }}
+              onClose={() => setReportOpen(false)}
+              onSubmitted={() => { setReportOpen(false); closeCandidate(); }}
+            />
+          )}
+        </AnimatePresence>
 
         {cand.note && (
           <div className="bg-surface-sunken border border-line rounded-[11px] px-4 py-[15px] mb-5">

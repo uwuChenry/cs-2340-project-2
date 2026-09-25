@@ -1,4 +1,6 @@
-import type { ButtonHTMLAttributes } from "react";
+"use client";
+
+import { motion, type HTMLMotionProps } from "motion/react";
 
 type Variant = "primary" | "secondary" | "accent" | "link";
 type Size = "sm" | "md";
@@ -17,12 +19,21 @@ const sizes: Record<Size, string> = {
   md: "px-4 py-2.5 text-[14.5px]",
 };
 
-type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
+type Props = HTMLMotionProps<"button"> & {
   variant?: Variant;
   size?: Size;
 };
 
 export default function Button({ variant = "secondary", size = "sm", className = "", ...props }: Props) {
   const styleClasses = variant === "link" ? variants.link : `${variants[variant]} ${sizes[size]}`;
-  return <button className={`${base} ${styleClasses} ${className}`} {...props} />;
+  // A small press-in on click; skipped for text links and disabled buttons.
+  const pressable = variant !== "link" && !props.disabled;
+  return (
+    <motion.button
+      className={`${base} ${styleClasses} ${className}`}
+      whileTap={pressable ? { scale: 0.96 } : undefined}
+      transition={{ type: "spring", bounce: 0.4, visualDuration: 0.2 }}
+      {...props}
+    />
+  );
 }

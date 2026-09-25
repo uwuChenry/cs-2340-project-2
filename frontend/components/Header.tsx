@@ -1,11 +1,14 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { motion, useAnimate } from "motion/react";
 import { usePathname, useRouter } from "next/navigation";
 import { messageOf } from "@/lib/api";
 import { useAppState } from "@/state/AppState";
 import { useAuth } from "@/state/AuthState";
 import UserMenu from "./UserMenu";
+import { spring } from "./motion";
 
 type Tab = { href: string; label: string };
 
@@ -62,16 +65,25 @@ export default function Header() {
         <nav className="flex flex-wrap gap-1 flex-1 min-w-0">
           {tabs.map((tab) => {
             const active = pathname === tab.href;
-            const label = tab.label === "Shortlist" ? `Shortlist (${cart.length})` : tab.label;
             return (
               <Link
                 key={tab.href}
                 href={tab.href}
-                className={`px-[13px] py-[7px] rounded-lg text-sm font-medium whitespace-nowrap no-underline ${
-                  active ? "bg-surface text-ink" : "text-muted hover:bg-hover-fill"
+                className={`relative px-[13px] py-[7px] rounded-lg text-sm font-medium whitespace-nowrap no-underline transition-colors duration-150 ${
+                  active ? "text-ink" : "text-muted hover:bg-hover-fill"
                 }`}
               >
-                {label}
+                {/* One shared pill that slides to whichever tab is active. */}
+                {active && <motion.span layoutId="nav-pill" transition={spring} className="absolute inset-0 z-0 rounded-lg bg-surface" />}
+                <span className="relative z-10">
+                  {tab.label === "Shortlist" ? (
+                    <>
+                      Shortlist (<CountBadge count={cart.length} />)
+                    </>
+                  ) : (
+                    tab.label
+                  )}
+                </span>
               </Link>
             );
           })}
@@ -101,5 +113,24 @@ export default function Header() {
         </div>
       </div>
     </header>
+  );
+}
+
+// The shortlist count, which bounces when a role is added.
+function CountBadge({ count }: { count: number }) {
+  const [scope, animate] = useAnimate<HTMLSpanElement>();
+  const previous = useRef(count);
+
+  useEffect(() => {
+    if (count > previous.current) {
+      animate(scope.current, { scale: [1, 1.5, 1] }, { duration: 0.45, ease: "easeOut" });
+    }
+    previous.current = count;
+  }, [count, animate, scope]);
+
+  return (
+    <span ref={scope} className="inline-block tabular-nums">
+      {count}
+    </span>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence } from "motion/react";
 import { http } from "@/lib/api";
 import type { ApiJob } from "@/lib/apiTypes";
 import { toJob } from "@/lib/adapters";
@@ -18,8 +19,14 @@ import { SingleLocationMap } from "./SchematicMap";
 import ReportDialog from "./ReportDialog";
 
 export default function JobSheet() {
+  const { openJobId } = useAppState();
+  // The panel takes the id as a prop so it keeps rendering the same role while
+  // it slides out, after openJobId has already gone back to null.
+  return <AnimatePresence>{openJobId && <JobSheetPanel key="job-sheet" jobId={openJobId} />}</AnimatePresence>;
+}
+
+function JobSheetPanel({ jobId }: { jobId: string }) {
   const {
-    openJobId,
     closeJob,
     applied,
     applyJob,
@@ -38,14 +45,11 @@ export default function JobSheet() {
   // The list view already has most of this, but the sheet needs the fields only
   // the detail endpoint returns (which required skills the seeker has).
   const detail = useAsync(
-    () => http.get<ApiJob>(`/api/jobs/${openJobId}/`),
-    [openJobId, user?.id ?? null],
-    openJobId !== null,
+    () => http.get<ApiJob>(`/api/jobs/${jobId}/`),
+    [jobId, user?.id ?? null],
   );
 
-  if (!openJobId) return null;
-
-  const loaded = detail.data && String(detail.data.id) === openJobId ? toJob(detail.data) : null;
+  const loaded = detail.data && String(detail.data.id) === jobId ? toJob(detail.data) : null;
 
   if (!loaded) {
     return (
@@ -148,13 +152,15 @@ export default function JobSheet() {
           </div>
         )}
 
-        {user && reportOpen && (
-          <ReportDialog
-            target={{ kind: "job", id: job.id, label: "this job" }}
-            onClose={() => setReportOpen(false)}
-            onSubmitted={() => { setReportOpen(false); closeJob(); }}
-          />
-        )}
+        <AnimatePresence>
+          {user && reportOpen && (
+            <ReportDialog
+              target={{ kind: "job", id: job.id, label: "this job" }}
+              onClose={() => setReportOpen(false)}
+              onSubmitted={() => { setReportOpen(false); closeJob(); }}
+            />
+          )}
+        </AnimatePresence>
       </div>
 
       <div className="px-7 pb-[34px]">
