@@ -64,7 +64,10 @@ export default function JobsLeafletMap({
   const unpinned = jobs.length - pinned.length;
 
   return (
-    <div className="relative bg-surface border border-line rounded-xl overflow-hidden">
+    // Leaflet's panes and controls use z-index 400-1000, far above the app's own
+    // overlays (header z-40, job sheet z-60). `isolate` gives the map its own
+    // stacking context so those values only compete inside this box.
+    <div className="relative isolate bg-surface border border-line rounded-xl overflow-hidden">
       <MapContainer center={US_CENTER} zoom={4} scrollWheelZoom style={{ height: 520 }}>
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
