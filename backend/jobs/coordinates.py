@@ -1,8 +1,12 @@
-from geopy.geocoders import Nominatim
+"""Turns a job posting into map coordinates.
 
-# Nominatim's usage policy requires an identifying user agent. Its default 1s
-# timeout is often too short, so a slow response doesn't count as "not found".
-geolocator = Nominatim(user_agent="roster-2340-project-2", timeout=5)
+This is the job-level rule (what to look up, and when not to). The actual
+network call lives in geocoding.py, so there is only one Nominatim client in
+the project.
+"""
+
+from .geocoding import geocode
+
 
 def jobLocation(job):
     """Returns the (latitude, longitude) of the given job, or None if it is remote or cannot be found"""
@@ -12,16 +16,11 @@ def jobLocation(job):
     # The post form fills `address` with the first comma-separated part, which is
     # just the city when the recruiter only types "Atlanta, GA". Repeating the city
     # makes Nominatim miss, so it is dropped in that case.
-    street = job.address if job.address.strip().lower() != job.city.strip().lower() else ""
-    query = ", ".join(part.strip() for part in [street, job.city, job.state] if part and part.strip())
-    if not query:
-        return None
+    address = job.address or ""
+    city = job.city or ""
+    street = address if address.strip().lower() != city.strip().lower() else ""
 
-    try:
-        location = geolocator.geocode(query, country_codes="us")
-    except Exception:
+    location = geocode(street, city, job.state or "")
+    if location is None:
         return None
-
-    if not location:
-        return None
-    return (round(location.latitude, 6), round(location.longitude, 6))
+    return (round(location[0], 6), round(location[1], 6))
