@@ -37,6 +37,11 @@ ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver', 'pchen432.pyth
 # slash). Added to the CORS and CSRF allowlists below.
 FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', '').rstrip('/')
 
+# PythonAnywhere terminates HTTPS at its proxy and forwards plain HTTP. Trusting
+# its X-Forwarded-Proto header makes absolute URLs (profile photos) https://, so
+# the https frontend doesn't block them as mixed content.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 
 # Application definition
 
