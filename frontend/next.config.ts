@@ -12,10 +12,17 @@ const nextConfig: NextConfig = {
   // calling the backend's domain directly would make it a third-party cookie, which
   // Safari and Chrome's tracking protection drop. Unset in local dev, where the
   // browser talks to :8000 directly.
+  //
+  // Django's URLs all end in "/", but Next redirects "/api/jobs/" to "/api/jobs" by
+  // default, and Django then redirects back: a loop, and POSTs fail outright. So the
+  // automatic redirect is off, and the slashed rule comes first so the slash is kept
+  // when forwarding.
+  skipTrailingSlashRedirect: true,
   async rewrites() {
     const backend = process.env.API_URL?.replace(/\/$/, "");
     if (!backend) return [];
     return [
+      { source: "/api/:path*/", destination: `${backend}/api/:path*/` },
       { source: "/api/:path*", destination: `${backend}/api/:path*` },
       { source: "/media/:path*", destination: `${backend}/media/:path*` },
     ];
