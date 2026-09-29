@@ -106,6 +106,51 @@ class RegisterTests(APITestCase):
         self.assertEqual(User.objects.count(), 0)
 
 
+class AdminModerationTests(APITestCase):
+    def setUp(self):
+        self.admin_user = User.objects.create_user("admin", password=STRONG)
+        Profile.objects.create(user=self.admin_user, role=Profile.Role.ADMIN)
+        self.client.force_login(self.admin_user)
+
+        self.company = Company.objects.create(name="Acme Robotics")
+        self.recruiter_user = User.objects.create_user("recruiter", password=STRONG)
+        Profile.objects.create(user=self.recruiter_user, role=Profile.Role.RECRUITER)
+        self.recruiter_profile = RecruiterProfile.objects.create(
+            user=self.recruiter_user,
+            company=self.company,
+            title="Talent Partner",
+        )
+        self.job = JobPosting.objects.create(
+            recruiter=self.recruiter_profile,
+            company=self.company,
+            title="Senior Platform Engineer",
+            description="Build systems.",
+            city="Atlanta",
+            state="GA",
+            status=JobPosting.Status.PUBLISHED,
+        )
+
+    def test_admin_can_manage_roles(self):
+        response = self.client.patch(
+            f"/api/admin/users/{self.recruiter_user.pk}/",
+            {"role": Profile.Role.JOB_SEEKER},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Profile.objects.get(user=self.recruiter_user).role, Profile.Role.JOB_SEEKER)
+        self.assertEqual(self.client.get("/api/admin/users/").status_code, 200)
+
+    def test_admin_can_close_spam_job_post(self):
+        response = self.client.patch(
+            f"/api/admin/jobs/{self.job.pk}/moderate/",
+            {"status": JobPosting.Status.CLOSED, "reason": "spam"},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.job.refresh_from_db()
+        self.assertEqual(self.job.status, JobPosting.Status.CLOSED)
+
+
 class SeekerProfileEditingTests(APITestCase):
     def setUp(self):
         self.client.post("/api/auth/register/", seeker_payload(), format="json")

@@ -10,3 +10,6 @@ __pycache__/
 
 # User-uploaded profile photos are personal data; never commit them.
 /backend/media/avatars/
+
+# collectstatic output
+/backend/staticfiles/

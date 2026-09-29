@@ -30,7 +30,14 @@ export default function LoginPage() {
       // everyone signing in from them should start on their own home.
       const returnable = next && next.startsWith("/") && !next.startsWith("//") && !["/", "/login", "/signup"].includes(next);
       const safeNext = returnable ? next : null;
-      router.push(safeNext ?? (user.role === "recruiter" ? "/recruiter/pipeline" : "/search"));
+      router.push(
+        safeNext ??
+          (user.role === "admin"
+            ? "/admin"
+            : user.role === "recruiter"
+              ? "/recruiter/pipeline"
+              : "/search"),
+      );
     } catch (err) {
       setError(messageOf(err));
       setSubmitting(false);

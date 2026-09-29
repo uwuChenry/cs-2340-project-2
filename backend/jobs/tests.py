@@ -57,3 +57,78 @@ class RadiusFilterTests(APITestCase):
         SeekerProfile.objects.filter(user__username="seeker").update(latitude=None, longitude=None)
         self.client.login(username="seeker", password=PASSWORD)
         self.assertEqual(self.titles(radius=10), {"Nearby", "Far away", "Unlocated", "Remote"})
+
+
+from unittest.mock import patch
+
+OFFICE = (30.2729, -97.7444)  # 1104 Rio Grande St, Austin
+
+
+@patch("jobs.coordinates.geocode", return_value=OFFICE)
+class RecruiterOfficePinTests(APITestCase):
+    """Story 18 (pin from the typed address) and story 7 (pinned roles on the map)."""
+
+    def setUp(self):
+        self.client.post("/api/auth/register/", {
+            "username": "pinrec", "password": PASSWORD, "email": "p@example.test",
+            "firstName": "Pat", "lastName": "Recruiter", "role": "recruiter",
+            "company": "Initech", "title": "Talent Partner",
+        }, format="json")
+
+    def post(self, **fields):
+        body = {"title": "Intern", "description": "d", "address": "1104 Rio Grande St",
+                "city": "Austin", "state": "TX", "setup": "hybrid", "status": "published", **fields}
+        return self.client.post("/api/recruiter/jobs/", body, format="json")
+
+    def test_publishing_pins_the_office(self, geocode):
+        response = self.post()
+        self.assertEqual(response.status_code, 201)
+        self.assertAlmostEqual(response.data["latitude"], OFFICE[0])
+        self.assertAlmostEqual(response.data["longitude"], OFFICE[1])
+        geocode.assert_called_once_with("1104 Rio Grande St", "Austin", "TX")
+
+    def test_draft_is_pinned_too(self, geocode):
+        response = self.post(status="draft")
+        self.assertEqual(response.status_code, 201)
+        self.assertIsNotNone(response.data["latitude"])
+
+    def test_city_only_address_is_not_repeated(self, geocode):
+        self.post(address="Austin")
+        geocode.assert_called_once_with("", "Austin", "TX")
+
+    def test_remote_role_gets_no_pin(self, geocode):
+        response = self.post(setup="remote")
+        self.assertEqual(response.status_code, 201)
+        self.assertIsNone(response.data["latitude"])
+        geocode.assert_not_called()
+
+    def test_failed_lookup_still_saves(self, geocode):
+        geocode.return_value = None
+        response = self.post()
+        self.assertEqual(response.status_code, 201)
+        self.assertIsNone(response.data["latitude"])
+
+    def test_moving_the_office_repins(self, geocode):
+        job_id = self.post().data["id"]
+        geocode.return_value = (33.7756, -84.3963)
+        response = self.client.patch(f"/api/recruiter/jobs/{job_id}/", {
+            "address": "North Ave NW", "city": "Atlanta", "state": "GA",
+        }, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertAlmostEqual(response.data["latitude"], 33.7756)
+
+    def test_unrelated_edit_keeps_pin_without_new_lookup(self, geocode):
+        job_id = self.post().data["id"]
+        geocode.reset_mock()
+        response = self.client.patch(f"/api/recruiter/jobs/{job_id}/", {"title": "Renamed"}, format="json")
+        self.assertEqual(response.status_code, 200)
+        self.assertAlmostEqual(response.data["latitude"], OFFICE[0])
+        geocode.assert_not_called()
+
+    def test_published_role_shows_on_search_map(self, geocode):
+        job_id = self.post().data["id"]
+        jobs = self.client.get("/api/jobs/").data
+        jobs = jobs.get("results", jobs) if isinstance(jobs, dict) else jobs
+        pinned = [j for j in jobs if j["id"] == job_id]
+        self.assertEqual(len(pinned), 1)
+        self.assertAlmostEqual(pinned[0]["latitude"], OFFICE[0])

@@ -12,7 +12,7 @@ from rest_framework import serializers
 
 from .matching import distance_miles, is_recommended, skill_match_pct
 from .models import JobPosting
-
+from .coordinates import jobLocation
 
 class JobPostingSerializer(serializers.ModelSerializer):
     """A posting as the search list and map need it."""
@@ -103,6 +103,8 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
     text input showing "$150k - $185k", but parsing display text is a frontend
     concern -- the database keeps one unambiguous unit.
     """
+    latitude = serializers.FloatField(read_only=True)
+    longitude = serializers.FloatField(read_only=True)
 
     # Write-only: on input this is a list of names, but on output the M2M manager
     # is not iterable by ListField, so to_representation supplies the names.
@@ -148,21 +150,28 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         skill_names = validated_data.pop("skills", [])
         recruiter = self.context["recruiter"]
-        self._maybe_geocode(validated_data)
         job = JobPosting.objects.create(
             recruiter=recruiter, company=recruiter.company, **validated_data
         )
         self._set_skills(job, skill_names)
+        self.fillCoordinates(job)
         return job
 
     def update(self, instance, validated_data):
         skill_names = validated_data.pop("skills", None)
-        self._maybe_geocode(validated_data, instance)
+        locationBefore = self._location_key(instance)
         for field, value in validated_data.items():
             setattr(instance, field, value)
+        # A moved office needs a new pin, so the old one is dropped and looked up
+        # again below. Saves that don't touch the location keep their pin and
+        # never hit the geocoder.
+        if self._location_key(instance) != locationBefore:
+            instance.latitude = None
+            instance.longitude = None
         instance.save()
         if skill_names is not None:
             self._set_skills(instance, skill_names)
+        self.fillCoordinates(instance)
         return instance
 
     @staticmethod
@@ -172,28 +181,21 @@ class RecruiterJobSerializer(serializers.ModelSerializer):
         job.skills.set(resolve_skills(skill_names))
 
     @staticmethod
-    def _maybe_geocode(validated_data, instance=None):
-        """Fill latitude/longitude from the typed address (story 18).
+    def _location_key(job):
+        return (job.address, job.city, job.state, job.work_arrangement)
 
-        Only runs when the client didn't send coordinates directly (so an API
-        caller can always override) and something address-related is actually
-        part of this save (so an unrelated PATCH, like a status change, doesn't
-        re-geocode every time). Best-effort: geocode() never raises, so a
-        posting still saves if the lookup fails or times out.
+    @staticmethod
+    def fillCoordinates(job):
+        """Pins the recruiter's office from its typed address (story 18) so the
+        role shows up on the job search map (story 7).
+
+        Runs for drafts too, so the pin is ready by the time the role is
+        published, and retries on a later save if an earlier lookup failed.
+        Best-effort: a failed or remote lookup just leaves the job pinless.
         """
-        if "latitude" in validated_data or "longitude" in validated_data:
+        if job.latitude is not None:
             return
-
-        address_fields = {"address", "city", "state"}
-        if not address_fields & validated_data.keys():
-            return
-
-        from .geocoding import geocode
-
-        address = validated_data.get("address", getattr(instance, "address", "") if instance else "")
-        city = validated_data.get("city", getattr(instance, "city", "") if instance else "")
-        state = validated_data.get("state", getattr(instance, "state", "") if instance else "")
-
-        result = geocode(address, city, state)
-        if result:
-            validated_data["latitude"], validated_data["longitude"] = result
+        coordinates = jobLocation(job)
+        if coordinates is not None:
+            job.latitude, job.longitude = coordinates
+            job.save(update_fields=["latitude", "longitude"])

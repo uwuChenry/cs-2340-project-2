@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   description: "Search roles by skills, location, and preferences — or source candidates for your openings.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"

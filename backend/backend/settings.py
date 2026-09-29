@@ -20,13 +20,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9&p=)+#&sn7(0k7&#l+ta^95aln#7(92a*ot7dzzv5j*@26_au'
+# Production sets DJANGO_SECRET_KEY (PythonAnywhere: in the WSGI file); the
+# insecure fallback is only for local development.
+SECRET_KEY = os.environ.get(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-9&p=)+#&sn7(0k7&#l+ta^95aln#7(92a*ot7dzzv5j*@26_au',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', '1') == '1'
 
 # 'testserver' is what Django's own test client sends as the Host header.
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]', 'testserver', 'pchen432.pythonanywhere.com']
+
+# The deployed frontend's origin, e.g. https://yourapp.vercel.app (no trailing
+# slash). Added to the CORS and CSRF allowlists below.
+FRONTEND_ORIGIN = os.environ.get('FRONTEND_ORIGIN', '').rstrip('/')
+
+# PythonAnywhere terminates HTTPS at its proxy and forwards plain HTTP. Trusting
+# its X-Forwarded-Proto header makes absolute URLs (profile photos) https://, so
+# the https frontend doesn't block them as mixed content.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 # Application definition
@@ -145,6 +159,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
+# Where collectstatic gathers files for the production web server to serve.
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -180,14 +196,14 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-]
+] + ([FRONTEND_ORIGIN] if FRONTEND_ORIGIN else [])
 CORS_ALLOW_CREDENTIALS = True
 
 # Django 4+ checks Origin on unsafe methods even for same-site session auth.
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-]
+] + ([FRONTEND_ORIGIN] if FRONTEND_ORIGIN else [])
 
 # The frontend reads this cookie and echoes it back in the X-CSRFToken header,
 # so it must stay readable from JavaScript.
