@@ -1,0 +1,1070 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400..700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #BDE6A0; font-family: "Nunito", system-ui, sans-serif; color: #4A3726; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  a { color: #2F6DB5; font-weight: 700; text-decoration: none; }
+  a:hover { color: #1F4A80; text-decoration: underline; }
+  input, select, textarea, button { font: inherit; color: inherit; }
+  input:focus, select:focus, textarea:focus { outline: 3px solid #F9D65C; outline-offset: 1px; }
+  ::placeholder { color: #A38D72; }
+</style>
+</helmet>
+<div style="min-height: 100vh; background-color: {{ groundBg }}; background-image: radial-gradient({{ groundDot }} 2px, transparent 2.5px); background-size: 22px 22px;">
+
+  <header style="position: sticky; top: 0; z-index: 40; background: rgba(255,248,225,0.95); box-shadow: 0 4px 0 rgba(60,35,15,0.08);">
+    <div style="max-width: 1320px; margin: 0 auto; padding: 12px 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px;">
+      <div style="display: flex; align-items: center; gap: 9px; flex-shrink: 0;">
+        <div style="width: 34px; height: 34px; border-radius: 50%; background: #3F8F24; display: grid; place-items: center; box-shadow: 0 3px 0 #2E6B18;">
+          <div style="width: 13px; height: 13px; border-radius: 13px 0 13px 0; background: #FFF8E1;"></div>
+        </div>
+        <span style="font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 600; color: #4A3726;">Roster</span>
+      </div>
+
+      <nav style="display: flex; flex-wrap: wrap; gap: 8px; flex: 1 1 auto; min-width: 0; padding-bottom: 4px;">
+        <sc-for list="{{ tabs }}" as="tab" hint-placeholder-count="4">
+          <button onClick="{{ tab.go }}" style="border: 0; background: {{ tab.bg }}; color: {{ tab.fg }}; box-shadow: 0 4px 0 {{ tab.edge }}; padding: 8px 15px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; white-space: nowrap;" style-active="transform: translateY(3px); box-shadow: none;">{{ tab.label }}</button>
+        </sc-for>
+      </nav>
+
+      <div style="display: flex; align-items: center; gap: 12px; flex-shrink: 0;">
+        <div style="display: flex; padding: 4px; background: #EFE3C2; border-radius: 999px;">
+          <button onClick="{{ setSeeker }}" style="border: 0; background: {{ seekerChipBg }}; color: {{ seekerChipFg }}; padding: 6px 13px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Job seeker</button>
+          <button onClick="{{ setRecruiter }}" style="border: 0; background: {{ recruiterChipBg }}; color: {{ recruiterChipFg }}; padding: 6px 13px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Recruiter</button>
+        </div>
+        <div style="width: 38px; height: 38px; border-radius: 50%; background: #FFD7A8; border: 3px solid #FFFFFF; box-shadow: 0 3px 0 #D9C59A; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; color: #8A4B1C;">{{ initials }}</div>
+      </div>
+    </div>
+  </header>
+
+  <main style="max-width: 1320px; margin: 0 auto; padding: 28px 28px 110px;">
+
+    <!-- ============ SEEKER · BOARD (search) ============ -->
+    <sc-if value="{{ isSearch }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 18px;">
+          <div>
+            <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #6B4E2E; padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; box-shadow: 0 3px 0 #D9C59A;">The Board</span>
+            <h1 style="margin: 0; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 600; color: #3A2A1C; letter-spacing: -0.01em;">{{ resultCount }} postings match your filters</h1>
+          </div>
+          <div style="display: flex; gap: 6px; padding: 4px; background: #FFF8E1; border-radius: 999px; box-shadow: 0 4px 0 #D9C59A;">
+            <sc-for list="{{ viewModes }}" as="m" hint-placeholder-count="3">
+              <button onClick="{{ m.go }}" style="border: 0; background: {{ m.bg }}; color: {{ m.fg }}; padding: 7px 15px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer;">{{ m.label }}</button>
+            </sc-for>
+          </div>
+        </div>
+
+        <sc-if value="{{ showGuideRec }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; gap: 12px; align-items: flex-end; margin-bottom: 22px; max-width: 760px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: #FFD7A8; border: 4px solid #FFF8E1; flex-shrink: 0; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 20px; color: #8A4B1C; box-shadow: 0 4px 0 rgba(60,35,15,0.18);">P</div>
+            <div style="position: relative; flex: 1; background: #FFF8E1; border-radius: 22px; padding: 16px 20px 14px; box-shadow: 0 5px 0 #D9C59A;">
+              <span style="position: absolute; top: -12px; left: 18px; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #C8552A; color: #FFFFFF; padding: 3px 12px; border-radius: 999px;">Pip · town clerk</span>
+              <div style="font-size: 15.5px; font-weight: 700; line-height: 1.5; color: #4A3726;">{{ recSummary }}</div>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+
+          <aside style="flex: 1 1 250px; max-width: 310px; background: #FFF8E1; border-radius: 24px; padding: 20px; box-shadow: 0 5px 0 #D9C59A;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <span style="font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">What you're after</span>
+              <button onClick="{{ clearFilters }}" style="border: 0; background: none; padding: 0; font-size: 13px; font-weight: 700; color: #8A6E52; cursor: pointer; text-decoration: underline;">Reset</button>
+            </div>
+
+            <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Title or keyword</label>
+            <input value="{{ fQuery }}" onChange="{{ onQuery }}" placeholder="e.g. frontend engineer" style="width: 100%; padding: 10px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 600; margin-bottom: 16px;" />
+
+            <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 8px;">Skills</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 7px 6px; margin-bottom: 18px;">
+              <sc-for list="{{ skillFilters }}" as="s" hint-placeholder-count="6">
+                <button onClick="{{ s.toggle }}" style="border: 0; background: {{ s.bg }}; color: {{ s.fg }}; box-shadow: 0 3px 0 {{ s.edge }}; padding: 5px 12px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;">{{ s.name }}</button>
+              </sc-for>
+            </div>
+
+            <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Location</label>
+            <input value="{{ fLocation }}" onChange="{{ onLocation }}" placeholder="City or town" style="width: 100%; padding: 10px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 600; margin-bottom: 16px;" />
+
+            <label style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;"><span>Minimum pay</span><span style="font-family: 'Fredoka', sans-serif; color: #3F8F24;">{{ minSalaryLabel }}</span></label>
+            <input type="range" min="60" max="220" step="10" value="{{ fMinSalary }}" onChange="{{ onSalary }}" style="width: 100%; margin: 0 0 16px; accent-color: #3F8F24;" />
+
+            <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 8px;">Work setup</label>
+            <div style="display: flex; gap: 6px; margin-bottom: 18px;">
+              <sc-for list="{{ setupOptions }}" as="o" hint-placeholder-count="3">
+                <button onClick="{{ o.go }}" style="flex: 1; border: 0; background: {{ o.bg }}; color: {{ o.fg }}; box-shadow: 0 3px 0 {{ o.edge }}; padding: 7px 4px; border-radius: 12px; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer;">{{ o.label }}</button>
+              </sc-for>
+            </div>
+
+            <label style="display: flex; justify-content: space-between; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;"><span>Walking distance</span><span style="font-family: 'Fredoka', sans-serif; color: #3F8F24;">{{ radiusLabel }}</span></label>
+            <input type="range" min="5" max="60" step="5" value="{{ fRadius }}" onChange="{{ onRadius }}" style="width: 100%; margin: 0 0 16px; accent-color: #3F8F24;" />
+
+            <button onClick="{{ toggleVisa }}" style="width: 100%; display: flex; align-items: center; gap: 10px; border: 0; background: {{ visaBg }}; box-shadow: 0 3px 0 {{ visaEdge }}; border-radius: 14px; padding: 10px 12px; cursor: pointer; text-align: left;">
+              <div style="width: 20px; height: 20px; border-radius: 7px; border: 2px solid {{ visaBox }}; background: {{ visaDot }}; flex-shrink: 0;"></div>
+              <span style="font-size: 13.5px; font-weight: 700; color: {{ visaFg }};">Offers visa sponsorship</span>
+            </button>
+          </aside>
+
+          <sc-if value="{{ showList }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 3 1 400px; min-width: 0; background: #8E5F36; border-radius: 26px; padding: 16px; box-shadow: inset 0 0 0 5px #744B28, 0 6px 0 #5E3C1F;">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; padding: 4px 8px 16px;">
+                <span style="font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; color: #FFF8E1;">Town job board</span>
+                <span style="font-size: 13px; font-weight: 800; color: #FFF8E1; background: #5E3C1F; padding: 4px 11px; border-radius: 999px; white-space: nowrap;">{{ nearbyCount }} within {{ radiusLabel }}</span>
+              </div>
+              <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFF8E1; border-radius: 16px; padding: 30px; text-align: center; font-weight: 700; color: #6B5540;">Nothing pinned up that matches. Try loosening a filter.</div>
+              </sc-if>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 18px 14px; padding: 6px 4px 4px;">
+                <sc-for list="{{ jobList }}" as="job" hint-placeholder-count="6">
+                  <article onClick="{{ job.open }}" style="position: relative; background: {{ job.paper }}; border-radius: 16px; padding: 18px 16px 15px; transform: rotate({{ job.rot }}); box-shadow: 0 4px 0 rgba(40,20,5,0.25); cursor: pointer; display: flex; flex-direction: column; gap: 8px; outline: {{ job.outline }};" style-hover="transform: rotate(0deg) translateY(-3px);">
+                    <div style="position: absolute; top: -7px; left: 50%; width: 16px; height: 16px; margin-left: -8px; border-radius: 50%; background: {{ job.pin }}; box-shadow: 0 2px 0 rgba(40,20,5,0.3);"></div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                      <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                        <div style="width: 30px; height: 30px; border-radius: 50%; background: {{ job.logoBg }}; color: #FFFFFF; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 11.5px; font-weight: 600; flex-shrink: 0;">{{ job.mark }}</div>
+                        <span style="font-size: 13.5px; font-weight: 800; color: #6B5540; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ job.company }}</span>
+                      </div>
+                      <sc-if value="{{ job.isRec }}" hint-placeholder-val="{{ false }}">
+                        <span style="font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 600; background: #3F8F24; color: #FFFFFF; padding: 2px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;">{{ job.matchLabel }}</span>
+                      </sc-if>
+                    </div>
+                    <h3 style="margin: 0; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; line-height: 1.2; color: #3A2A1C;">{{ job.title }}</h3>
+                    <div style="font-size: 13.5px; font-weight: 700; color: #6B5540; line-height: 1.45;">{{ job.location }} · {{ job.setupShort }} · {{ job.distanceLabel }}<br /><span style="color: #3A2A1C;">{{ job.salary }}</span></div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 5px;">
+                      <sc-for list="{{ job.skills }}" as="sk" hint-placeholder-count="3">
+                        <span style="font-size: 12px; font-weight: 700; color: #5B4636; background: rgba(255,255,255,0.7); border-radius: 999px; padding: 2px 9px;">{{ sk }}</span>
+                      </sc-for>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-top: 4px;">
+                      <button onClick="{{ job.apply }}" style="border: 0; background: {{ job.applyBg }}; color: {{ job.applyFg }}; box-shadow: 0 3px 0 {{ job.applyEdge }}; padding: 7px 15px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap;" style-active="transform: translateY(2px); box-shadow: none;">{{ job.applyLabel }}</button>
+                      <button onClick="{{ job.toggleCart }}" style="border: 0; background: {{ job.cartBg }}; color: {{ job.cartFg }}; box-shadow: 0 3px 0 {{ job.cartEdge }}; padding: 7px 13px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; cursor: pointer; white-space: nowrap;" style-active="transform: translateY(2px); box-shadow: none;">{{ job.cartLabel }}</button>
+                    </div>
+                  </article>
+                </sc-for>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showMap }}" hint-placeholder-val="{{ true }}">
+            <div style="flex: 2 1 340px; min-width: 0; background: #FFF8E1; border-radius: 26px; padding: 10px; box-shadow: 0 5px 0 #D9C59A;">
+              <div style="position: relative; height: 500px; border-radius: 20px; overflow: hidden; background-color: #7CC8EC; background-image: radial-gradient(#9AD6F1 2px, transparent 2.5px); background-size: 20px 20px;">
+                <div style="position: absolute; left: 5%; right: 5%; top: 6%; bottom: 8%; background: #F6E3B4; border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%;"></div>
+                <div style="position: absolute; left: 8.5%; right: 8.5%; top: 9.5%; bottom: 12%; background-color: #A6DB82; background-image: radial-gradient(#95CF6F 2px, transparent 2.5px); background-size: 18px 18px; border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%;"></div>
+                <div style="position: absolute; left: 57%; top: 12%; bottom: 14%; width: 16px; background: #7CC8EC; border-radius: 10px; transform: rotate(9deg);"></div>
+                <div style="position: absolute; left: 30%; top: 66%; width: 12%; height: 9%; background: #7CC8EC; border-radius: 50%;"></div>
+
+                <div style="position: absolute; left: 44%; top: 52%; width: {{ ringSize }}; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 50%; background: rgba(249,214,92,0.22); border: 3px dashed #C9A22C;"></div>
+                <div style="position: absolute; left: 44%; top: 52%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 3px;">
+                  <span style="width: 26px; height: 26px; border-radius: 50%; background: #FFD7A8; border: 3px solid #FFFFFF; box-shadow: 0 3px 0 rgba(40,20,5,0.3); display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 11px; font-weight: 600; color: #8A4B1C;">{{ initials }}</span>
+                </div>
+
+                <sc-for list="{{ pins }}" as="p" hint-placeholder-count="6">
+                  <button onClick="{{ p.open }}" style="position: absolute; left: {{ p.left }}%; top: {{ p.top }}%; transform: translate(-50%, -100%); border: 3px solid #FFFFFF; background: {{ p.bg }}; color: {{ p.fg }}; padding: 3px 10px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; box-shadow: 0 3px 0 rgba(40,20,5,0.28); white-space: nowrap;" style-hover="transform: translate(-50%, -115%);">{{ p.label }}</button>
+                </sc-for>
+
+                <div style="position: absolute; left: 12px; bottom: 12px; background: #FFF8E1; border-radius: 16px; padding: 9px 14px; box-shadow: 0 4px 0 #D9C59A;">
+                  <div style="font-size: 12.5px; font-weight: 700; color: #6B5540;">Within {{ radiusLabel }} of home</div>
+                  <div style="font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600;">{{ nearbyCount }} of {{ resultCount }} postings</div>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ SEEKER · POCKETS (cart) ============ -->
+    <sc-if value="{{ isCart }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #6B4E2E; padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; box-shadow: 0 3px 0 #D9C59A;">Your pockets</span>
+        <h1 style="margin: 0 0 6px; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 600; color: #3A2A1C;">Compare before you apply</h1>
+        <p style="margin: 0 0 22px; font-size: 16px; font-weight: 700; color: #5B4636; max-width: 580px; line-height: 1.5;">{{ cartCount }} postings tucked away. Look at them side by side, then send them all off at once.</p>
+
+        <sc-if value="{{ cartEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="background: #FFF8E1; border-radius: 24px; padding: 48px; text-align: center; box-shadow: 0 5px 0 #D9C59A;">
+            <p style="margin: 0 0 16px; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 600;">Your pockets are empty!</p>
+            <button onClick="{{ goSearch }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 4px 0 #2E6B18; padding: 10px 20px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;">Go to the board</button>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ cartHasItems }}" hint-placeholder-val="{{ true }}">
+          <div>
+            <div style="background: #FFF8E1; border-radius: 24px; overflow-x: auto; box-shadow: 0 5px 0 #D9C59A;">
+              <div style="display: grid; grid-template-columns: 160px repeat({{ cartCount }}, minmax(210px, 1fr)); min-width: 100%;">
+                <div style="padding: 20px 18px; border-bottom: 2px dashed #E6D6AE;"></div>
+                <sc-for list="{{ cartItems }}" as="c" hint-placeholder-count="2">
+                  <div style="padding: 20px 18px; border-bottom: 2px dashed #E6D6AE; border-left: 2px solid #F0E5C8;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                      <div style="width: 28px; height: 28px; border-radius: 50%; background: {{ c.logoBg }}; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 11px; font-weight: 600; color: #FFFFFF;">{{ c.mark }}</div>
+                      <span style="font-size: 13px; font-weight: 800; color: #6B5540;">{{ c.company }}</span>
+                    </div>
+                    <div style="font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; line-height: 1.25; color: #3A2A1C;">{{ c.title }}</div>
+                    <button onClick="{{ c.toggleCart }}" style="margin-top: 10px; border: 0; background: none; padding: 0; font-size: 13px; font-weight: 700; color: #8A6E52; cursor: pointer; text-decoration: underline;">Take out</button>
+                  </div>
+                </sc-for>
+                <sc-for list="{{ compareRows }}" as="row" hint-placeholder-count="5">
+                  <div style="display: grid; grid-column: 1 / -1; grid-template-columns: subgrid;">
+                    <div style="padding: 13px 18px; border-bottom: 2px solid #F0E5C8; font-size: 13px; font-weight: 800; color: #6B5540;">{{ row.label }}</div>
+                    <sc-for list="{{ row.cells }}" as="cell" hint-placeholder-count="2">
+                      <div style="padding: 13px 18px; border-bottom: 2px solid #F0E5C8; border-left: 2px solid #F0E5C8; font-size: 14.5px; font-weight: {{ cell.weight }}; color: {{ cell.color }};">{{ cell.text }}</div>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+              <button onClick="{{ clearCart }}" style="border: 0; background: #FFF8E1; color: #4A3726; box-shadow: 0 4px 0 #D9C59A; padding: 10px 18px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;">Empty pockets</button>
+              <button onClick="{{ applyAll }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 4px 0 #2E6B18; padding: 10px 20px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-active="transform: translateY(3px); box-shadow: none;">Send all {{ cartCount }} applications</button>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ============ SEEKER · MAILBOX (applications) ============ -->
+    <sc-if value="{{ isApps }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width: 900px;">
+        <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #1F4A66; padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; box-shadow: 0 3px 0 #8CC4DE;">Mailbox</span>
+        <h1 style="margin: 0 0 6px; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 600; color: #173A52;">Your applications</h1>
+        <p style="margin: 0 0 20px; font-size: 16px; font-weight: 700; color: #1F4A66;">{{ appsSummary }}</p>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px;">
+          <sc-for list="{{ stageCounts }}" as="s" hint-placeholder-count="5">
+            <div style="display: flex; align-items: center; gap: 9px; background: #FFF8E1; border-radius: 999px; padding: 7px 14px 7px 7px; box-shadow: 0 4px 0 #8CC4DE;">
+              <span style="min-width: 28px; height: 28px; padding: 0 8px; border-radius: 999px; background: {{ s.fill }}; color: {{ s.text }}; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600;">{{ s.count }}</span>
+              <span style="font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600;">{{ s.label }}</span>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <sc-for list="{{ applications }}" as="a" hint-placeholder-count="4">
+            <div style="background: #FFF8E1; border-radius: 22px; padding: 16px 18px; box-shadow: 0 5px 0 #D9C59A; display: flex; flex-wrap: wrap; gap: 16px; align-items: center;">
+              <div style="width: 76px; height: 76px; border-radius: 9px; background: {{ a.fill }}; border: 3px dashed #FFF8E1; outline: 3px solid {{ a.fill }}; flex-shrink: 0; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 12.5px; font-weight: 600; color: {{ a.text }}; text-align: center; line-height: 1.1; padding: 4px;">{{ a.stageLabel }}</div>
+              <div style="flex: 1 1 260px; min-width: 0;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                  <span style="font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; color: #3A2A1C;">{{ a.company }}</span>
+                  <sc-if value="{{ a.isNew }}" hint-placeholder-val="{{ false }}">
+                    <span style="font-size: 11px; font-weight: 800; background: #C23B38; color: #FFFFFF; padding: 2px 8px; border-radius: 999px;">NEW</span>
+                  </sc-if>
+                </div>
+                <div style="font-size: 14px; font-weight: 700; color: #6B5540; margin-bottom: 10px;">{{ a.title }} · {{ a.location }}</div>
+                <div style="display: flex; gap: 5px;">
+                  <sc-for list="{{ a.steps }}" as="st" hint-placeholder-count="5">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                      <span style="height: 10px; border-radius: 99px; background: {{ st.bar }};"></span>
+                      <span style="font-size: 11px; font-weight: 800; color: {{ st.fg }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ st.label }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="flex: 0 1 auto; margin-left: auto; text-align: right;">
+                <div style="font-size: 13px; font-weight: 700; color: #8A6E52;">{{ a.updated }}</div>
+                <div style="font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; color: #3A2A1C; margin-top: 2px;">{{ a.next }}</div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ SEEKER · MY HOUSE (profile) ============ -->
+    <sc-if value="{{ isProfile }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #6B4E2E; padding: 4px 12px; border-radius: 999px; margin-bottom: 16px; box-shadow: 0 3px 0 #D9C59A;">My house</span>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+          <div style="flex: 3 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 22px; box-shadow: 0 5px 0 #D9C59A;">
+              <div style="display: flex; gap: 18px; align-items: flex-start;">
+                <div style="width: 76px; height: 76px; border-radius: 50%; background: #FFD7A8; border: 4px solid #FFFFFF; box-shadow: 0 4px 0 #D9C59A; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 600; color: #8A4B1C; flex-shrink: 0;">{{ initials }}</div>
+                <div style="min-width: 0; flex: 1;">
+                  <h1 style="margin: 0 0 6px; font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 600; color: #3A2A1C;">Maya Ellison</h1>
+                  <input value="{{ headline }}" onChange="{{ onHeadline }}" style="width: 100%; padding: 9px 13px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 15px; font-weight: 700; margin-bottom: 10px;" />
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 14px; font-weight: 700; color: #6B5540;">
+                    <span>Austin, TX</span>
+                    <span>Open to remote</span>
+                    <a href="#">portfolio.mayae.dev</a>
+                    <a href="#">github.com/mayae</a>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 22px; box-shadow: 0 5px 0 #D9C59A;">
+              <h2 style="margin: 0 0 12px; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600;">Skills</h2>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <sc-for list="{{ mySkills }}" as="s" hint-placeholder-count="8">
+                  <span style="font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; color: #2E6B18; background: #D9F0C6; border-radius: 999px; padding: 5px 13px; box-shadow: 0 3px 0 #B5DB97;">{{ s }}</span>
+                </sc-for>
+                <button style="font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; color: #6B5540; background: #FFFFFF; border: 2px dashed #D9C59A; border-radius: 999px; padding: 4px 13px; cursor: pointer;">+ Add skill</button>
+              </div>
+            </section>
+
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 22px; box-shadow: 0 5px 0 #D9C59A;">
+              <h2 style="margin: 0 0 16px; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600;">Work experience</h2>
+              <div style="display: flex; flex-direction: column; gap: 18px;">
+                <sc-for list="{{ experience }}" as="e" hint-placeholder-count="2">
+                  <div style="display: flex; flex-wrap: wrap; gap: 8px 16px;">
+                    <span style="flex: 0 0 auto; align-self: flex-start; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #EFE3C2; color: #5B4636; padding: 3px 11px; border-radius: 999px;">{{ e.years }}</span>
+                    <div style="flex: 1 1 280px; min-width: 0;">
+                      <div style="font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600;">{{ e.role }}</div>
+                      <div style="font-size: 14px; font-weight: 700; color: #6B5540; margin: 2px 0 6px;">{{ e.org }}</div>
+                      <p style="margin: 0; font-size: 14.5px; font-weight: 600; color: #5B4636; line-height: 1.55;">{{ e.detail }}</p>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 22px; box-shadow: 0 5px 0 #D9C59A;">
+              <h2 style="margin: 0 0 14px; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600;">Education</h2>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px 16px;">
+                <span style="flex: 0 0 auto; align-self: flex-start; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #EFE3C2; color: #5B4636; padding: 3px 11px; border-radius: 999px;">2017 – 2021</span>
+                <div style="flex: 1 1 280px; min-width: 0;">
+                  <div style="font-family: 'Fredoka', sans-serif; font-size: 17px; font-weight: 600;">B.S. Computer Science</div>
+                  <div style="font-size: 14px; font-weight: 700; color: #6B5540; margin-top: 2px;">University of Texas at Austin</div>
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <aside style="flex: 1 1 290px; min-width: 0; max-width: 360px; background: #FFF8E1; border-radius: 24px; padding: 20px; box-shadow: 0 5px 0 #D9C59A;">
+            <h2 style="margin: 0 0 4px; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600;">Who can peek in</h2>
+            <p style="margin: 0 0 12px; font-size: 14px; font-weight: 600; color: #6B5540; line-height: 1.5;">Choose what recruiters see before you apply.</p>
+            <div style="display: flex; flex-direction: column;">
+              <sc-for list="{{ privacyRows }}" as="p" hint-placeholder-count="4">
+                <button onClick="{{ p.toggle }}" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border: 0; background: none; padding: 11px 0; cursor: pointer; text-align: left; border-bottom: 2px dashed #EADBB6;">
+                  <span style="min-width: 0;">
+                    <span style="display: block; font-size: 14.5px; font-weight: 800;">{{ p.label }}</span>
+                    <span style="display: block; font-size: 12.5px; font-weight: 600; color: #8A6E52; margin-top: 2px;">{{ p.hint }}</span>
+                  </span>
+                  <span style="width: 46px; height: 28px; border-radius: 999px; background: {{ p.trackBg }}; flex-shrink: 0; padding: 3px; display: flex; justify-content: {{ p.justify }}; box-shadow: inset 0 2px 0 rgba(0,0,0,0.12);">
+                    <span style="width: 22px; height: 22px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 0 rgba(0,0,0,0.18);"></span>
+                  </span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="margin-top: 14px; padding: 12px 14px; background: #FFFFFF; border-radius: 14px; font-size: 13.5px; font-weight: 700; color: #5B4636; line-height: 1.5;">{{ privacySummary }}</div>
+          </aside>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECRUITER · PIN A POSTING ============ -->
+    <sc-if value="{{ isPost }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #6B4E2E; padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; box-shadow: 0 3px 0 #D9C59A;">Pin a posting</span>
+        <h1 style="margin: 0 0 22px; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 600; color: #3A2A1C;">Post a role</h1>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+          <section style="flex: 3 1 420px; min-width: 0; background: #FFF8E1; border-radius: 24px; padding: 24px; box-shadow: 0 5px 0 #D9C59A;">
+            <div style="display: grid; gap: 16px;">
+              <div>
+                <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Role title</label>
+                <input value="Senior Frontend Engineer" style="width: 100%; padding: 11px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 15px; font-weight: 700;" />
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Pay range</label>
+                  <input value="$150k – $185k" style="width: 100%; padding: 11px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 15px; font-weight: 700;" />
+                </div>
+                <div>
+                  <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Work setup</label>
+                  <select style="width: 100%; padding: 11px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 15px; font-weight: 700;">
+                    <option>Hybrid · 3 days onsite</option>
+                    <option>Remote</option>
+                    <option>Onsite</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Skills you need</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 7px; padding: 10px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF;">
+                  <sc-for list="{{ postSkills }}" as="s" hint-placeholder-count="4">
+                    <span style="font-family: 'Fredoka', sans-serif; font-size: 13.5px; font-weight: 600; background: #D9F0C6; color: #2E6B18; border-radius: 999px; padding: 3px 11px;">{{ s }}</span>
+                  </sc-for>
+                  <input placeholder="Add skill…" style="border: 0; background: none; outline: none; font-size: 14px; font-weight: 600; flex: 1; min-width: 90px;" />
+                </div>
+              </div>
+              <div>
+                <label style="display: block; font-size: 13px; font-weight: 800; color: #6B5540; margin-bottom: 6px;">Description</label>
+                <textarea rows="5" style="width: 100%; padding: 12px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 15px; font-weight: 600; line-height: 1.55; resize: vertical;">You will own the candidate-facing surfaces of our product: search, map, and application flow. We care about craft, accessible markup, and shipping in small increments.</textarea>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; border-top: 2px dashed #E6D6AE; padding-top: 18px;">
+                <button onClick="{{ saveDraft }}" style="border: 0; background: #EFE3C2; color: #4A3726; box-shadow: 0 4px 0 #D9C59A; padding: 10px 18px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;">Save draft</button>
+                <button onClick="{{ publish }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 4px 0 #2E6B18; padding: 10px 20px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;" style-active="transform: translateY(3px); box-shadow: none;">Pin it to the board</button>
+              </div>
+            </div>
+          </section>
+
+          <section style="flex: 1 1 300px; min-width: 0; max-width: 420px; background: #FFF8E1; border-radius: 24px; padding: 18px; box-shadow: 0 5px 0 #D9C59A;">
+            <h2 style="margin: 0 0 4px; font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600;">Office location</h2>
+            <p style="margin: 0 0 14px; font-size: 14px; font-weight: 600; color: #6B5540; line-height: 1.5;">Drop the pin candidates will see on the map.</p>
+            <div style="position: relative; height: 240px; border-radius: 18px; overflow: hidden; background-color: #7CC8EC; background-image: radial-gradient(#9AD6F1 2px, transparent 2.5px); background-size: 18px 18px;">
+              <div style="position: absolute; left: 7%; right: 7%; top: 8%; bottom: 10%; background: #F6E3B4; border-radius: 48% 52% 44% 56% / 55% 42% 58% 45%;"></div>
+              <div style="position: absolute; left: 11%; right: 11%; top: 13%; bottom: 15%; background: #A6DB82; border-radius: 48% 52% 44% 56% / 55% 42% 58% 45%;"></div>
+              <div style="position: absolute; left: 50%; top: 52%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                <span style="font-family: 'Fredoka', sans-serif; background: #FFF8E1; color: #3A2A1C; font-size: 13px; font-weight: 600; padding: 4px 11px; border-radius: 999px; box-shadow: 0 3px 0 #D9C59A; white-space: nowrap;">1104 Rio Grande St</span>
+                <span style="width: 18px; height: 18px; border-radius: 50%; background: #C23B38; border: 3px solid #FFFFFF; box-shadow: 0 2px 0 rgba(40,20,5,0.3);"></span>
+              </div>
+            </div>
+            <input value="1104 Rio Grande St, Austin, TX" style="width: 100%; margin-top: 12px; padding: 10px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 700;" />
+          </section>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECRUITER · HIRING GARDEN (pipeline) ============ -->
+    <sc-if value="{{ isPipeline }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 20px;">
+          <div>
+            <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #6B4E2E; padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; box-shadow: 0 3px 0 #D9C59A;">Hiring garden · Senior Frontend Engineer</span>
+            <h1 style="margin: 0; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 600; color: #3A2A1C;">Applicant pipeline</h1>
+          </div>
+          <span style="font-size: 14px; font-weight: 700; color: #3A2A1C; background: #FFF8E1; padding: 7px 14px; border-radius: 999px; box-shadow: 0 3px 0 #D9C59A;">Tap someone to see their full application</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: start;">
+          <sc-for list="{{ pipeline }}" as="col" hint-placeholder-count="5">
+            <div style="background: #8E5F36; border-radius: 22px; padding: 12px; box-shadow: inset 0 0 0 4px #744B28, 0 5px 0 #5E3C1F; min-height: 180px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #FFF8E1; border-radius: 999px; padding: 5px 6px 5px 14px; margin-bottom: 12px;">
+                <span style="font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600;">{{ col.label }}</span>
+                <span style="min-width: 26px; height: 26px; padding: 0 7px; border-radius: 999px; background: {{ col.fill }}; color: {{ col.text }}; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600;">{{ col.count }}</span>
+              </div>
+              <div style="display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ col.cards }}" as="c" hint-placeholder-count="1">
+                  <button onClick="{{ c.open }}" style="text-align: left; width: 100%; background: #FFF8E1; border: 0; border-radius: 16px; padding: 12px; cursor: pointer; box-shadow: 0 4px 0 rgba(40,20,5,0.25);" style-hover="transform: translateY(-2px);">
+                    <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 6px;">
+                      <span style="width: 32px; height: 32px; border-radius: 50%; background: #FFD7A8; border: 2px solid #FFFFFF; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 600; color: #8A4B1C; flex-shrink: 0;">{{ c.initials }}</span>
+                      <span style="font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600;">{{ c.name }}</span>
+                    </div>
+                    <div style="font-size: 13px; font-weight: 700; color: #6B5540; margin-bottom: 8px;">{{ c.role }}</div>
+                    <span style="font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 600; color: #FFFFFF; background: #3F8F24; padding: 2px 9px; border-radius: 999px;">{{ c.match }}</span>
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <!-- ============ RECRUITER · SCOUTING (candidates) ============ -->
+    <sc-if value="{{ isCandidates }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <span style="display: inline-block; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #FFF8E1; color: #1F4A66; padding: 4px 12px; border-radius: 999px; margin-bottom: 8px; box-shadow: 0 3px 0 #8CC4DE;">Scouting</span>
+        <h1 style="margin: 0 0 20px; font-family: 'Fredoka', sans-serif; font-size: 34px; font-weight: 600; color: #173A52;">Find candidates</h1>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+          <aside style="flex: 1 1 280px; min-width: 0; max-width: 350px; display: flex; flex-direction: column; gap: 16px;">
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 20px; box-shadow: 0 5px 0 #8CC4DE;">
+              <h2 style="margin: 0 0 12px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Who are you looking for?</h2>
+              <input placeholder="Skills, e.g. React, GraphQL" style="width: 100%; padding: 10px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 600; margin-bottom: 10px;" />
+              <input placeholder="Location or radius" style="width: 100%; padding: 10px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 600; margin-bottom: 10px;" />
+              <input placeholder="Project keyword" style="width: 100%; padding: 10px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFFFF; font-size: 14px; font-weight: 600; margin-bottom: 14px;" />
+              <button onClick="{{ saveSearch }}" style="width: 100%; border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 4px 0 #2E6B18; padding: 10px 14px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;">{{ saveSearchLabel }}</button>
+            </section>
+
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 20px; box-shadow: 0 5px 0 #8CC4DE;">
+              <h2 style="margin: 0 0 8px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Saved searches</h2>
+              <div style="display: flex; flex-direction: column;">
+                <sc-for list="{{ savedSearches }}" as="s" hint-placeholder-count="3">
+                  <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 2px dashed #EADBB6;">
+                    <div style="min-width: 0;">
+                      <div style="font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ s.name }}</div>
+                      <div style="font-size: 12.5px; font-weight: 700; color: #8A6E52; margin-top: 2px;">{{ s.newCount }} new matches</div>
+                    </div>
+                    <button onClick="{{ s.toggle }}" style="border: 0; background: {{ s.bg }}; color: {{ s.fg }}; box-shadow: 0 3px 0 {{ s.edge }}; font-family: 'Fredoka', sans-serif; font-size: 12.5px; font-weight: 600; padding: 4px 11px; border-radius: 999px; cursor: pointer; white-space: nowrap;">{{ s.label }}</button>
+                  </div>
+                </sc-for>
+              </div>
+            </section>
+
+            <section style="background: #FFF8E1; border-radius: 24px; padding: 16px; box-shadow: 0 5px 0 #8CC4DE;">
+              <h2 style="margin: 0 0 3px 4px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Where applicants live</h2>
+              <p style="margin: 0 0 12px 4px; font-size: 13px; font-weight: 700; color: #6B5540;">Grouped across this opening</p>
+              <div style="position: relative; height: 220px; border-radius: 18px; overflow: hidden; background-color: #7CC8EC; background-image: radial-gradient(#9AD6F1 2px, transparent 2.5px); background-size: 18px 18px;">
+                <div style="position: absolute; left: 6%; right: 6%; top: 7%; bottom: 9%; background: #F6E3B4; border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%;"></div>
+                <div style="position: absolute; left: 10%; right: 10%; top: 12%; bottom: 14%; background: #A6DB82; border-radius: 46% 54% 42% 58% / 52% 44% 56% 48%;"></div>
+                <sc-for list="{{ clusters }}" as="cl" hint-placeholder-count="4">
+                  <div style="position: absolute; left: {{ cl.left }}%; top: {{ cl.top }}%; transform: translate(-50%, -50%); width: {{ cl.size }}; height: {{ cl.size }}; border-radius: 50%; background: #FFF8E1; border: 3px solid #C8552A; box-shadow: 0 3px 0 rgba(40,20,5,0.25); display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; color: #3A2A1C;">{{ cl.count }}</div>
+                </sc-for>
+              </div>
+            </section>
+          </aside>
+
+          <div style="flex: 3 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 14px;">
+            <sc-if value="{{ showGuide }}" hint-placeholder-val="{{ true }}">
+              <div style="display: flex; gap: 12px; align-items: flex-end; margin-bottom: 6px;">
+                <div style="width: 52px; height: 52px; border-radius: 50%; background: #FFD7A8; border: 4px solid #FFF8E1; flex-shrink: 0; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 19px; color: #8A4B1C;">P</div>
+                <div style="position: relative; flex: 1; background: #FFFFFF; border-radius: 22px; padding: 16px 20px 14px; box-shadow: 0 5px 0 #8CC4DE;">
+                  <span style="position: absolute; top: -12px; left: 18px; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #C8552A; color: #FFFFFF; padding: 3px 12px; border-radius: 999px;">Pip · town clerk</span>
+                  <div style="font-size: 15px; font-weight: 700; line-height: 1.5;">Four folks have every skill on your Senior Frontend posting and live nearby. I put the best fits first.</div>
+                </div>
+              </div>
+            </sc-if>
+            <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="5">
+              <article onClick="{{ c.open }}" style="background: #FFF8E1; border-radius: 22px; padding: 16px 18px; cursor: pointer; display: flex; flex-wrap: wrap; gap: 14px 16px; align-items: center; box-shadow: 0 5px 0 #8CC4DE;" style-hover="transform: translateY(-2px);">
+                <div style="width: 50px; height: 50px; border-radius: 50%; background: #FFD7A8; border: 3px solid #FFFFFF; box-shadow: 0 3px 0 #D9C59A; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; color: #8A4B1C; flex-shrink: 0;">{{ c.initials }}</div>
+                <div style="flex: 1 1 220px; min-width: 0;">
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 3px;">
+                    <span style="font-family: 'Fredoka', sans-serif; font-size: 19px; font-weight: 600; color: #3A2A1C;">{{ c.name }}</span>
+                    <span style="font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 600; color: #FFFFFF; background: #3F8F24; padding: 2px 9px; border-radius: 999px; white-space: nowrap;">{{ c.match }}</span>
+                  </div>
+                  <div style="font-size: 14px; font-weight: 700; color: #6B5540; margin-bottom: 9px;">{{ c.role }} · {{ c.location }}</div>
+                  <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                    <sc-for list="{{ c.skills }}" as="sk" hint-placeholder-count="4">
+                      <span style="font-size: 12.5px; font-weight: 700; color: #5B4636; background: #EFE3C2; border-radius: 999px; padding: 2px 10px;">{{ sk }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="flex: 0 1 auto; margin-left: auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px;">
+                  <button onClick="{{ c.message }}" style="border: 0; background: #EFE3C2; color: #4A3726; box-shadow: 0 3px 0 #D9C59A; padding: 8px 15px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;">Message</button>
+                  <button onClick="{{ c.open }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 3px 0 #2E6B18; padding: 8px 15px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap;">Review</button>
+                </div>
+              </article>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </main>
+
+  <!-- ============ JOB DETAIL SHEET ============ -->
+  <sc-if value="{{ jobOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeJob }}" style="position: fixed; inset: 0; z-index: 60; background: rgba(40,25,10,0.38); display: flex; justify-content: flex-end;">
+      <div onClick="{{ stop }}" style="width: min(620px, 100%); height: 100%; background: #FFF8E1; border-radius: 30px 0 0 30px; overflow-y: auto; box-shadow: -6px 0 0 rgba(40,20,5,0.12);">
+        <div style="padding: 26px 28px 20px; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; border-bottom: 2px dashed #E6D6AE;">
+          <div style="min-width: 0;">
+            <div style="display: flex; align-items: center; gap: 9px; margin-bottom: 8px;">
+              <div style="width: 34px; height: 34px; border-radius: 50%; background: {{ detail.logoBg }}; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 12px; font-weight: 600; color: #FFFFFF;">{{ detail.mark }}</div>
+              <span style="font-size: 14.5px; font-weight: 800; color: #6B5540;">{{ detail.company }}</span>
+            </div>
+            <h2 style="margin: 0 0 8px; font-family: 'Fredoka', sans-serif; font-size: 28px; font-weight: 600; line-height: 1.15; color: #3A2A1C;">{{ detail.title }}</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 14.5px; font-weight: 700; color: #6B5540;">
+              <span>{{ detail.location }}</span>
+              <span>{{ detail.setupShort }}</span>
+              <span style="color: #3A2A1C;">{{ detail.salary }}</span>
+              <span>{{ detail.distanceLabel }}</span>
+            </div>
+          </div>
+          <button onClick="{{ closeJob }}" style="border: 0; background: #EFE3C2; box-shadow: 0 3px 0 #D9C59A; width: 38px; height: 38px; border-radius: 50%; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 600; cursor: pointer; flex-shrink: 0; line-height: 1;">×</button>
+        </div>
+
+        <div style="padding: 20px 28px 0;">
+          <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+            <button onClick="{{ detail.apply }}" style="border: 0; background: {{ detail.applyBg }}; color: {{ detail.applyFg }}; box-shadow: 0 4px 0 {{ detail.applyEdge }}; padding: 11px 22px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; white-space: nowrap;" style-active="transform: translateY(3px); box-shadow: none;">{{ detail.applyLabel }}</button>
+            <button onClick="{{ detail.toggleCart }}" style="border: 0; background: {{ detail.cartBg }}; color: {{ detail.cartFg }}; box-shadow: 0 4px 0 {{ detail.cartEdge }}; padding: 11px 18px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; white-space: nowrap;">{{ detail.cartLabel }}</button>
+          </div>
+
+          <sc-if value="{{ noteOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #FFFFFF; border-radius: 22px; padding: 18px; margin-bottom: 20px; box-shadow: 0 4px 0 #E6D6AE;">
+              <div style="font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600; margin-bottom: 3px;">Write them a little note</div>
+              <p style="margin: 0 0 10px; font-size: 13.5px; font-weight: 600; color: #6B5540;">Optional, up to 400 characters. Recruiters see it above your profile.</p>
+              <textarea value="{{ note }}" onChange="{{ onNote }}" rows="4" placeholder="Why this role, in your own words…" style="width: 100%; padding: 12px 14px; border: 2px solid #E6D6AE; border-radius: 14px; background: #FFFDF6; font-size: 14.5px; font-weight: 600; line-height: 1.55; resize: vertical; margin-bottom: 10px; background-image: repeating-linear-gradient(transparent, transparent 25px, #F0E5C8 25px, #F0E5C8 27px); background-position: 0 10px;"></textarea>
+              <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 14px;">
+                <sc-for list="{{ notePrompts }}" as="p" hint-placeholder-count="3">
+                  <button onClick="{{ p.insert }}" style="border: 2px dashed #D9C59A; background: #FFF8E1; color: #5B4636; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 999px; cursor: pointer;">+ {{ p.label }}</button>
+                </sc-for>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px;">
+                <button onClick="{{ cancelNote }}" style="border: 0; background: #EFE3C2; color: #4A3726; box-shadow: 0 3px 0 #D9C59A; padding: 9px 16px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Send without note</button>
+                <button onClick="{{ submitNote }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 3px 0 #2E6B18; padding: 9px 18px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Send application</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ detail.applied }}" hint-placeholder-val="{{ false }}">
+            <div style="background: #D9F0C6; border-radius: 18px; padding: 13px 16px; margin-bottom: 20px; font-size: 14.5px; font-weight: 700; color: #1F4F0F; box-shadow: 0 3px 0 #B5DB97;">Sent! It's in your Mailbox under <strong>Applied</strong>.</div>
+          </sc-if>
+        </div>
+
+        <div style="padding: 0 28px 36px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 22px;">
+            <sc-for list="{{ detail.facts }}" as="f" hint-placeholder-count="4">
+              <div style="background: #FFFFFF; border-radius: 16px; padding: 11px 14px;">
+                <div style="font-size: 12.5px; font-weight: 700; color: #8A6E52; margin-bottom: 2px;">{{ f.label }}</div>
+                <div style="font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600;">{{ f.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 8px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">About the role</h3>
+          <p style="margin: 0 0 22px; font-size: 15px; font-weight: 600; line-height: 1.6; color: #5B4636;">{{ detail.about }}</p>
+
+          <h3 style="margin: 0 0 4px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Skills they're after</h3>
+          <p style="margin: 0 0 10px; font-size: 13px; font-weight: 700; color: #8A6E52;">Green ones are on your profile</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px;">
+            <sc-for list="{{ detail.skillChips }}" as="sk" hint-placeholder-count="5">
+              <span style="font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; color: {{ sk.fg }}; background: {{ sk.bg }}; border-radius: 999px; padding: 4px 13px;">{{ sk.text }}</span>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 10px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Where it is</h3>
+          <div style="position: relative; height: 180px; border-radius: 18px; overflow: hidden; background-color: #7CC8EC; background-image: radial-gradient(#9AD6F1 2px, transparent 2.5px); background-size: 18px 18px;">
+            <div style="position: absolute; left: 6%; right: 6%; top: 10%; bottom: 10%; background: #F6E3B4; border-radius: 48% 52% 44% 56% / 55% 42% 58% 45%;"></div>
+            <div style="position: absolute; left: 10%; right: 10%; top: 16%; bottom: 16%; background: #A6DB82; border-radius: 48% 52% 44% 56% / 55% 42% 58% 45%;"></div>
+            <div style="position: absolute; left: 50%; top: 54%; transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; gap: 4px;">
+              <span style="font-family: 'Fredoka', sans-serif; background: #FFF8E1; color: #3A2A1C; font-size: 13px; font-weight: 600; padding: 4px 11px; border-radius: 999px; box-shadow: 0 3px 0 #D9C59A; white-space: nowrap;">{{ detail.address }}</span>
+              <span style="width: 18px; height: 18px; border-radius: 50%; background: #C23B38; border: 3px solid #FFFFFF;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <!-- ============ CANDIDATE REVIEW SHEET ============ -->
+  <sc-if value="{{ candOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeCand }}" style="position: fixed; inset: 0; z-index: 60; background: rgba(40,25,10,0.38); display: flex; justify-content: flex-end;">
+      <div onClick="{{ stop }}" style="width: min(660px, 100%); height: 100%; background: #FFF8E1; border-radius: 30px 0 0 30px; overflow-y: auto;">
+        <div style="padding: 26px 28px 20px; display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; border-bottom: 2px dashed #E6D6AE;">
+          <div style="display: flex; gap: 14px; min-width: 0; align-items: center;">
+            <div style="width: 64px; height: 64px; border-radius: 50%; background: #FFD7A8; border: 4px solid #FFFFFF; box-shadow: 0 4px 0 #D9C59A; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-size: 22px; font-weight: 600; color: #8A4B1C; flex-shrink: 0;">{{ cand.initials }}</div>
+            <div style="min-width: 0;">
+              <h2 style="margin: 0 0 3px; font-family: 'Fredoka', sans-serif; font-size: 26px; font-weight: 600; color: #3A2A1C;">{{ cand.name }}</h2>
+              <div style="font-size: 14.5px; font-weight: 700; color: #6B5540;">{{ cand.role }} · {{ cand.location }}</div>
+            </div>
+          </div>
+          <button onClick="{{ closeCand }}" style="border: 0; background: #EFE3C2; box-shadow: 0 3px 0 #D9C59A; width: 38px; height: 38px; border-radius: 50%; font-family: 'Fredoka', sans-serif; font-size: 20px; font-weight: 600; cursor: pointer; flex-shrink: 0; line-height: 1;">×</button>
+        </div>
+
+        <div style="padding: 20px 28px 36px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 22px;">
+            <button onClick="{{ cand.message }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 4px 0 #2E6B18; padding: 10px 17px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Message in Roster</button>
+            <button onClick="{{ emailCand }}" style="border: 0; background: #EFE3C2; color: #4A3726; box-shadow: 0 4px 0 #D9C59A; padding: 10px 17px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Email candidate</button>
+            <button onClick="{{ advanceCand }}" style="border: 0; background: #F9D65C; color: #5B3B00; box-shadow: 0 4px 0 #D9A92C; padding: 10px 17px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 14.5px; font-weight: 600; cursor: pointer; white-space: nowrap;">Move to next stage</button>
+          </div>
+
+          <div style="position: relative; background: #FFFFFF; border-radius: 22px; padding: 20px 20px 16px; margin-bottom: 22px; box-shadow: 0 4px 0 #E6D6AE;">
+            <span style="position: absolute; top: -12px; left: 18px; font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #2F6DB5; color: #FFFFFF; padding: 3px 12px; border-radius: 999px;">{{ cand.firstName }}'s note</span>
+            <p style="margin: 0; font-size: 15px; font-weight: 600; line-height: 1.6; color: #4A3726;">{{ cand.note }}</p>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 22px;">
+            <sc-for list="{{ cand.facts }}" as="f" hint-placeholder-count="4">
+              <div style="background: #FFFFFF; border-radius: 16px; padding: 11px 14px;">
+                <div style="font-size: 12.5px; font-weight: 700; color: #8A6E52; margin-bottom: 2px;">{{ f.label }}</div>
+                <div style="font-family: 'Fredoka', sans-serif; font-size: 16px; font-weight: 600;">{{ f.value }}</div>
+              </div>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 4px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Skill match</h3>
+          <p style="margin: 0 0 10px; font-size: 13px; font-weight: 700; color: #8A6E52;">Green ones match your posting</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 24px;">
+            <sc-for list="{{ cand.skillChips }}" as="sk" hint-placeholder-count="5">
+              <span style="font-family: 'Fredoka', sans-serif; font-size: 14px; font-weight: 600; color: {{ sk.fg }}; background: {{ sk.bg }}; border-radius: 999px; padding: 4px 13px;">{{ sk.text }}</span>
+            </sc-for>
+          </div>
+
+          <h3 style="margin: 0 0 12px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Work experience</h3>
+          <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 26px;">
+            <sc-for list="{{ cand.experience }}" as="e" hint-placeholder-count="2">
+              <div style="display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: flex-start;">
+                <span style="font-family: 'Fredoka', sans-serif; font-size: 13px; font-weight: 600; background: #EFE3C2; color: #5B4636; padding: 3px 11px; border-radius: 999px;">{{ e.years }}</span>
+                <div style="flex: 1 1 240px; min-width: 0;">
+                  <div style="font-family: 'Fredoka', sans-serif; font-size: 16.5px; font-weight: 600;">{{ e.role }}</div>
+                  <div style="font-size: 13.5px; font-weight: 700; color: #6B5540; margin-top: 1px;">{{ e.org }}</div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <sc-if value="{{ msgOpen }}" hint-placeholder-val="{{ false }}">
+            <div style="border-top: 2px dashed #E6D6AE; padding-top: 20px;">
+              <h3 style="margin: 0 0 12px; font-family: 'Fredoka', sans-serif; font-size: 18px; font-weight: 600;">Chat with {{ cand.firstName }}</h3>
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
+                <div style="align-self: center; font-size: 12.5px; font-weight: 700; color: #8A6E52;">{{ cand.firstName }} viewed your posting yesterday</div>
+                <sc-for list="{{ thread }}" as="m" hint-placeholder-count="1">
+                  <div style="align-self: {{ m.align }}; max-width: 80%; background: {{ m.bg }}; color: {{ m.fg }}; border-radius: {{ m.radius }}; padding: 11px 15px; font-size: 14.5px; font-weight: 600; line-height: 1.5; box-shadow: 0 3px 0 {{ m.edge }};">{{ m.text }}</div>
+                </sc-for>
+              </div>
+              <div style="display: flex; gap: 8px;">
+                <input value="{{ draft }}" onChange="{{ onDraft }}" onKeyDown="{{ onDraftKey }}" placeholder="Write a message…" style="flex: 1; min-width: 0; padding: 11px 15px; border: 2px solid #E6D6AE; border-radius: 999px; background: #FFFFFF; font-size: 14.5px; font-weight: 600;" />
+                <button onClick="{{ sendMsg }}" style="border: 0; background: #3F8F24; color: #FFFFFF; box-shadow: 0 3px 0 #2E6B18; padding: 10px 20px; border-radius: 999px; font-family: 'Fredoka', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;">Send</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ toast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 80; display: flex; align-items: flex-end; gap: 10px; max-width: calc(100% - 32px);">
+      <div style="width: 48px; height: 48px; border-radius: 50%; background: #FFD7A8; border: 4px solid #FFFFFF; flex-shrink: 0; display: grid; place-items: center; font-family: 'Fredoka', sans-serif; font-weight: 600; font-size: 18px; color: #8A4B1C; box-shadow: 0 4px 0 rgba(40,20,5,0.25);">P</div>
+      <div style="background: #FFFFFF; border-radius: 20px; padding: 12px 18px; font-size: 15px; font-weight: 800; color: #3A2A1C; box-shadow: 0 5px 0 rgba(40,20,5,0.18);">{{ toast }}</div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;mapMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Split list + map&quot;,&quot;Map first&quot;,&quot;List only&quot;],&quot;default&quot;:&quot;Split list + map&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Search&quot;},&quot;oneClickApply&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Apply flow&quot;},&quot;showGuide&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Personality&quot;},&quot;defaultRole&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Job seeker&quot;,&quot;Recruiter&quot;],&quot;default&quot;:&quot;Job seeker&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Demo&quot;}}">
+class Component extends DCLogic {
+  state = {
+    role: null, screen: null, view: null,
+    q: "", loc: "", minSalary: 60, setup: "any", radius: 10, visa: false, skills: [],
+    cart: ["j2", "j5"], applied: {},
+    openJob: null, noteOpen: false, note: "", openCand: null, msgOpen: false,
+    headline: "Frontend engineer who loves search, maps and accessible UI",
+    privacy: { name: true, contact: false, current: true, openToWork: true },
+    savedOn: { s1: true, s2: false, s3: true }, searchSaved: false,
+    stages: { c1: "Review", c2: "Interview", c3: "Applied", c4: "Applied", c5: "Offer" },
+    threads: {}, draft: "",
+    toast: ""
+  };
+
+  jobs = [
+    { id: "j1", title: "Senior Frontend Engineer", company: "Northline Labs", mark: "NL", logoBg: "#2F6DB5", location: "Austin, TX", setup: "Hybrid", salary: "$150k–$185k", low: 150, dist: 4, visa: true, posted: "2 days ago", left: 49, top: 40, address: "1104 Rio Grande St", skills: ["React", "TypeScript", "Mapbox", "Accessibility"], about: "Own the candidate-facing surfaces: search, map, and the application flow. Small team, weekly releases, real design partnership." },
+    { id: "j2", title: "Product Engineer, Growth", company: "Havenly", mark: "HV", logoBg: "#3F8F24", location: "Remote (US)", setup: "Remote", salary: "$135k–$160k", low: 135, dist: 0, visa: false, posted: "4 days ago", left: 26, top: 58, address: "Fully remote", skills: ["React", "Node", "Experimentation"], about: "Run the experiment pipeline end to end, from hypothesis to shipped surface. You will work directly with the head of product." },
+    { id: "j3", title: "UI Engineer, Design Systems", company: "Cartwheel", mark: "CW", logoBg: "#C8552A", location: "Austin, TX", setup: "Onsite", salary: "$140k–$170k", low: 140, dist: 9, visa: true, posted: "1 week ago", left: 68, top: 30, address: "300 W 6th St", skills: ["TypeScript", "Design Systems", "Figma"], about: "Maintain the component library used by nine product teams. Heavy emphasis on documentation and migration tooling." },
+    { id: "j4", title: "Full Stack Engineer", company: "Mesa Point", mark: "MP", logoBg: "#7A52B8", location: "Round Rock, TX", setup: "Hybrid", salary: "$125k–$150k", low: 125, dist: 18, visa: false, posted: "3 days ago", left: 76, top: 20, address: "2500 Hesters Crossing", skills: ["Node", "Postgres", "React"], about: "Backend-leaning full stack work on the scheduling service. Comfortable owning migrations and on-call rotation." },
+    { id: "j5", title: "Frontend Engineer, Maps", company: "Terrafold", mark: "TF", logoBg: "#4A3726", location: "Austin, TX", setup: "Hybrid", salary: "$145k–$175k", low: 145, dist: 6, visa: true, posted: "Yesterday", left: 36, top: 50, address: "801 Barton Springs Rd", skills: ["React", "Mapbox", "WebGL", "TypeScript"], about: "Build interactive geospatial views for logistics planners. You will pair with data engineers on tile pipelines." },
+    { id: "j6", title: "Senior Web Engineer", company: "Kestrel Health", mark: "KH", logoBg: "#1F7A80", location: "San Marcos, TX", setup: "Onsite", salary: "$130k–$155k", low: 130, dist: 31, visa: false, posted: "5 days ago", left: 58, top: 80, address: "700 N LBJ Dr", skills: ["React", "Accessibility", "Testing"], about: "Patient-facing scheduling and records UI with a hard accessibility bar. WCAG 2.2 AA is a requirement, not a goal." },
+    { id: "j7", title: "Staff Engineer, Platform UI", company: "Orrick Data", mark: "OD", logoBg: "#B8407A", location: "Remote (US)", setup: "Remote", salary: "$180k–$215k", low: 180, dist: 0, visa: true, posted: "6 days ago", left: 18, top: 30, address: "Fully remote", skills: ["TypeScript", "GraphQL", "Design Systems"], about: "Set frontend direction across four product lines. Half architecture, half mentorship." }
+  ];
+
+  mySkills = ["React", "TypeScript", "Mapbox", "Accessibility", "Node", "Testing", "GraphQL", "Figma"];
+
+  candidateData = [
+    { id: "c1", name: "Dev Raman", role: "Senior Frontend Engineer", location: "Austin, TX · 5 mi", match: "94% match", skills: ["React", "TypeScript", "Mapbox", "WebGL"], note: "I spent the last two years on a logistics mapping product, mostly vector tiles and clustering at scale. Your posting is the first I've seen that treats the map as the main surface rather than a tab." },
+    { id: "c2", name: "Priya Shah", role: "UI Engineer", location: "Remote · CST", match: "88% match", skills: ["React", "Design Systems", "Figma", "Testing"], note: "Design systems are my thing. I migrated 140 components off a legacy library last year without a freeze window." },
+    { id: "c3", name: "Marcus Bell", role: "Product Engineer", location: "Round Rock, TX · 17 mi", match: "81% match", skills: ["React", "Node", "Postgres"], note: "Generalist who likes owning a feature end to end. Happy to talk through the scheduling rewrite I led." },
+    { id: "c4", name: "Lena Ortiz", role: "Frontend Engineer", location: "Austin, TX · 2 mi", match: "79% match", skills: ["TypeScript", "Accessibility", "React"], note: "Accessibility is where I do my best work. I run the audit process at my current company." },
+    { id: "c5", name: "Tomas Vieira", role: "Staff Engineer", location: "Remote · EST", match: "76% match", skills: ["GraphQL", "TypeScript", "Node"], note: "Looking for a role with real architecture ownership after five years of platform work." }
+  ];
+
+  STAGES = [
+    { label: "Applied", fill: "#2F6DB5", text: "#FFFFFF" },
+    { label: "Review", fill: "#F9D65C", text: "#5B3B00" },
+    { label: "Interview", fill: "#7A52B8", text: "#FFFFFF" },
+    { label: "Offer", fill: "#3F8F24", text: "#FFFFFF" },
+    { label: "Closed", fill: "#74685A", text: "#FFFFFF" }
+  ];
+
+  t(msg) {
+    clearTimeout(this._tt);
+    this.setState({ toast: msg });
+    this._tt = setTimeout(() => this.setState({ toast: "" }), 2600);
+  }
+
+  componentWillUnmount() { clearTimeout(this._tt); }
+
+  screenNow() {
+    const role = this.state.role ?? (this.props.defaultRole === "Recruiter" ? "recruiter" : "seeker");
+    return { role, screen: this.state.screen ?? (role === "seeker" ? "search" : "pipeline") };
+  }
+
+  go(screen) { return () => this.setState({ screen, openJob: null, openCand: null }); }
+
+  sendMsg() {
+    const S = this.state, text = S.draft.trim();
+    if (!text || !S.openCand) return;
+    const list = S.threads[S.openCand] || [];
+    this.setState({ threads: { ...S.threads, [S.openCand]: [...list, { me: true, text }] }, draft: "" });
+    const who = this.candidateData.find(c => c.id === S.openCand).name.split(" ")[0];
+    clearTimeout(this._rt);
+    this._rt = setTimeout(() => {
+      const cur = this.state.threads[S.openCand] || [];
+      this.setState({ threads: { ...this.state.threads, [S.openCand]: [...cur, { me: false, text: "Thanks for reaching out! Thursday afternoon works for me." }] } });
+      this.t(who + " wrote back!");
+    }, 1400);
+  }
+
+  renderVals() {
+    const S = this.state;
+    const { role, screen } = this.screenNow();
+    const mapMode = this.props.mapMode ?? "Split list + map";
+    const view = S.view ?? (mapMode === "Map first" ? "map" : mapMode === "List only" ? "list" : "split");
+    const showGuide = this.props.showGuide ?? true;
+    const INK = "#4A3726";
+    const Y = { bg: "#F9D65C", fg: "#5B3B00", edge: "#D9A92C" };
+    const N = { bg: "#EFE3C2", fg: "#5B4636", edge: "#D9C59A" };
+    const C = { bg: "#FFF8E1", fg: "#5B4636", edge: "#D9C59A" };
+    const G = { bg: "#3F8F24", fg: "#FFFFFF", edge: "#2E6B18" };
+
+    const grounds = {
+      search: ["#BDE6A0", "#A9DA87"], cart: ["#F6E3B4", "#EDD49A"], apps: ["#9ED8F2", "#B4E2F6"],
+      profile: ["#F3D9B8", "#EACAA0"], pipeline: ["#BDE6A0", "#A9DA87"], candidates: ["#9ED8F2", "#B4E2F6"], post: ["#F6E3B4", "#EDD49A"]
+    };
+    const [groundBg, groundDot] = grounds[screen] || grounds.search;
+
+    const tabDefs = role === "seeker"
+      ? [["search", "Board"], ["cart", "Pockets · " + S.cart.length], ["apps", "Mailbox"], ["profile", "My house"]]
+      : [["pipeline", "Garden"], ["candidates", "Scouting"], ["post", "Post a role"]];
+    const tabs = tabDefs.map(([id, label]) => {
+      const p = screen === id ? Y : C;
+      return { label, go: this.go(id), bg: p.bg, fg: p.fg, edge: p.edge };
+    });
+
+    const q = S.q.trim().toLowerCase(), loc = S.loc.trim().toLowerCase();
+    const filtered = this.jobs.filter(j => {
+      if (q && !(j.title + " " + j.company).toLowerCase().includes(q)) return false;
+      if (loc && !j.location.toLowerCase().includes(loc)) return false;
+      if (j.low < S.minSalary) return false;
+      if (S.setup === "remote" && j.setup !== "Remote") return false;
+      if (S.setup === "onsite" && j.setup === "Remote") return false;
+      if (S.visa && !j.visa) return false;
+      if (S.skills.length && !S.skills.every(s => j.skills.includes(s))) return false;
+      return true;
+    });
+
+    const papers = ["#FFF8E1", "#E6F5FF", "#FDEBE3", "#EEF8E4"];
+    const pinsC = ["#C23B38", "#F9D65C", "#2F6DB5", "#3F8F24"];
+    const rots = ["-1.2deg", "0.9deg", "-0.6deg", "1.3deg"];
+    const decorate = (j, i = 0) => {
+      const inCart = S.cart.includes(j.id), applied = !!S.applied[j.id];
+      const pct = Math.round(j.skills.filter(s => this.mySkills.includes(s)).length / j.skills.length * 100);
+      const cp = inCart ? Y : N;
+      const ap = applied ? { bg: "#D9F0C6", fg: "#1F4F0F", edge: "#B5DB97" } : G;
+      return {
+        ...j, isRec: pct >= 75, matchLabel: pct + "% match",
+        setupShort: j.setup, distanceLabel: j.dist === 0 ? "anywhere" : j.dist + " mi",
+        paper: papers[i % 4], pin: pinsC[i % 4], rot: rots[i % 4],
+        outline: applied ? "3px solid #3F8F24" : "0",
+        applied, inCart,
+        cartLabel: inCart ? "In pocket" : "Pocket it", cartBg: cp.bg, cartFg: cp.fg, cartEdge: cp.edge,
+        applyLabel: applied ? "Sent!" : "Apply", applyBg: ap.bg, applyFg: ap.fg, applyEdge: ap.edge,
+        open: e => { if (e) e.stopPropagation(); this.setState({ openJob: j.id, noteOpen: false }); },
+        toggleCart: e => {
+          if (e) e.stopPropagation();
+          const has = this.state.cart.includes(j.id);
+          this.setState({ cart: has ? this.state.cart.filter(x => x !== j.id) : [...this.state.cart, j.id] });
+          this.t(has ? "Took it out of your pockets." : "Tucked it in your pockets!");
+        },
+        apply: e => {
+          if (e) e.stopPropagation();
+          if (this.state.applied[j.id]) return;
+          if (this.props.oneClickApply === false) { this.setState({ openJob: j.id, noteOpen: true }); return; }
+          this.setState({ applied: { ...this.state.applied, [j.id]: true }, openJob: j.id, noteOpen: true });
+          this.t("Sent to " + j.company + "! Want to add a note?");
+        }
+      };
+    };
+
+    const ranked = filtered.slice().sort((a, b) => {
+      const s = x => x.skills.filter(k => this.mySkills.includes(k)).length / x.skills.length >= 0.75 ? 1 : 0;
+      return s(b) - s(a);
+    });
+    const jobList = ranked.map((j, i) => decorate(j, i));
+    const inRange = j => j.dist <= S.radius || j.dist === 0;
+    const nearby = filtered.filter(inRange);
+    const recs = jobList.filter(j => j.isRec);
+    const recNear = recs.filter(j => inRange(j) && j.dist > 0).length;
+
+    const chipOf = (on) => on ? Y : C;
+    const skillFilters = ["React", "TypeScript", "Node", "Mapbox", "Accessibility", "GraphQL"].map(name => {
+      const on = S.skills.includes(name), p = chipOf(on);
+      return { name, bg: p.bg, fg: p.fg, edge: p.edge, toggle: () => this.setState({ skills: on ? S.skills.filter(s => s !== name) : [...S.skills, name] }) };
+    });
+    const setupOptions = [["any", "Any"], ["remote", "Remote"], ["onsite", "Onsite"]].map(([id, label]) => {
+      const p = S.setup === id ? Y : N;
+      return { label, bg: p.bg, fg: p.fg, edge: p.edge, go: () => this.setState({ setup: id }) };
+    });
+    const viewModes = [["list", "Board"], ["split", "Both"], ["map", "Map"]].map(([id, label]) => ({
+      label, go: () => this.setState({ view: id }), bg: view === id ? "#F9D65C" : "transparent", fg: view === id ? "#5B3B00" : "#5B4636"
+    }));
+
+    const cartItems = S.cart.map(id => this.jobs.find(j => j.id === id)).filter(Boolean).map(j => decorate(j));
+    const cell = (text, strong) => ({ text, weight: strong ? "800" : "600", color: strong ? "#3A2A1C" : "#5B4636" });
+    const compareRows = [
+      { label: "Pay", cells: cartItems.map(c => cell(c.salary, true)) },
+      { label: "Location", cells: cartItems.map(c => cell(c.location)) },
+      { label: "Work setup", cells: cartItems.map(c => cell(c.setup)) },
+      { label: "Distance", cells: cartItems.map(c => cell(c.dist === 0 ? "Work from anywhere" : c.dist + " mi from home")) },
+      { label: "Visa sponsorship", cells: cartItems.map(c => cell(c.visa ? "Yes" : "No")) },
+      { label: "Skill match", cells: cartItems.map(c => cell(c.matchLabel, true)) },
+      { label: "Posted", cells: cartItems.map(c => cell(c.posted)) }
+    ];
+
+    const baseApps = [
+      { id: "a3", title: "Staff Engineer, Platform UI", company: "Orrick Data", location: "Remote", stage: 3, updated: "5 hours ago", next: "Offer to review", isNew: true },
+      { id: "a1", title: "Frontend Engineer, Maps", company: "Terrafold", location: "Austin, TX", stage: 2, updated: "Yesterday", next: "Onsite on Thursday" },
+      { id: "a2", title: "UI Engineer, Design Systems", company: "Cartwheel", location: "Austin, TX", stage: 1, updated: "3 days ago", next: "Being read" },
+      { id: "a4", title: "Full Stack Engineer", company: "Mesa Point", location: "Round Rock, TX", stage: 4, updated: "2 weeks ago", next: "Role filled" }
+    ];
+    const extra = Object.keys(S.applied).map(id => {
+      const j = this.jobs.find(x => x.id === id);
+      return j && !baseApps.some(a => a.company === j.company)
+        ? { id: "n" + id, title: j.title, company: j.company, location: j.location, stage: 0, updated: "Just now", next: "On its way", isNew: true } : null;
+    }).filter(Boolean);
+    const applications = [...extra, ...baseApps].map(a => {
+      const st = this.STAGES[a.stage];
+      return {
+        ...a, fill: st.fill, text: st.text, stageLabel: st.label, isNew: !!a.isNew,
+        steps: this.STAGES.map((s, i) => ({ label: s.label, bar: i <= a.stage ? st.fill : "#EFE3C2", fg: i <= a.stage ? "#4A3726" : "#8A6E52" }))
+      };
+    });
+    const stageCounts = this.STAGES.map((s, i) => ({ label: s.label, fill: s.fill, text: s.text, count: applications.filter(a => a.stage === i).length }));
+    const newCount = applications.filter(a => a.isNew).length;
+    const appsSummary = applications.length + " letters sent" + (newCount ? " · " + newCount + " with news" : "");
+
+    const pDefs = [
+      ["name", "Show my full name", "Otherwise recruiters see your initials"],
+      ["contact", "Show contact details", "Email and phone on your profile"],
+      ["current", "Show current employer", "Always hidden from your current company"],
+      ["openToWork", "Let recruiters know I'm looking", "Puts you in recruiter search"]
+    ];
+    const privacyRows = pDefs.map(([key, label, hint]) => ({
+      label, hint, trackBg: S.privacy[key] ? "#3F8F24" : "#D9C59A", justify: S.privacy[key] ? "flex-end" : "flex-start",
+      toggle: () => this.setState({ privacy: { ...S.privacy, [key]: !S.privacy[key] } })
+    }));
+    const hidden = pDefs.filter(([k]) => !S.privacy[k]).length;
+    const privacySummary = hidden === 0 ? "Your door is wide open. Verified recruiters see your whole profile."
+      : hidden + (hidden === 1 ? " thing stays" : " things stay") + " private until you apply somewhere.";
+
+    const cdec = c => ({
+      ...c, stage: S.stages[c.id],
+      initials: c.name.split(" ").map(w => w[0]).join(""), firstName: c.name.split(" ")[0],
+      open: e => { if (e) e.stopPropagation(); this.setState({ openCand: c.id, msgOpen: false, draft: "" }); },
+      message: e => { if (e) e.stopPropagation(); this.setState({ openCand: c.id, msgOpen: true, draft: "" }); }
+    });
+    const candidates = this.candidateData.map(cdec);
+    const pipeline = this.STAGES.map(s => {
+      const cards = candidates.filter(c => c.stage === s.label);
+      return { label: s.label, fill: s.fill, text: s.text, count: cards.length, cards };
+    });
+    const clusters = [
+      { left: 44, top: 46, size: "70px", count: 31 },
+      { left: 70, top: 30, size: "50px", count: 14 },
+      { left: 26, top: 64, size: "42px", count: 8 },
+      { left: 62, top: 72, size: "36px", count: 4 }
+    ];
+    const savedSearches = [["s1", "React + Mapbox, Austin 25 mi", 6], ["s2", "Design systems, remote US", 2], ["s3", "New grads, accessibility", 11]].map(([id, name, n]) => {
+      const p = S.savedOn[id] ? G : N;
+      return { name, newCount: n, label: S.savedOn[id] ? "Alerts on" : "Alerts off", bg: p.bg, fg: p.fg, edge: p.edge,
+        toggle: () => this.setState({ savedOn: { ...S.savedOn, [id]: !S.savedOn[id] } }) };
+    });
+
+    const chip = (text, hit) => ({ text, fg: hit ? "#1F4F0F" : "#5B4636", bg: hit ? "#D9F0C6" : "#EFE3C2" });
+    const dj = S.openJob ? this.jobs.find(j => j.id === S.openJob) : null;
+    const detail = dj ? {
+      ...decorate(dj),
+      facts: [
+        { label: "Level", value: "Senior" }, { label: "Team size", value: "6 engineers" },
+        { label: "Visa sponsorship", value: dj.visa ? "Available" : "Not offered" }, { label: "Posted", value: dj.posted }
+      ],
+      skillChips: dj.skills.map(s => chip(s, this.mySkills.includes(s)))
+    } : { facts: [], skillChips: [], logoBg: "#4A3726" };
+
+    const cc = S.openCand ? this.candidateData.find(c => c.id === S.openCand) : null;
+    const cand = cc ? {
+      ...cdec(cc),
+      facts: [
+        { label: "Stage", value: S.stages[cc.id] }, { label: "Applied", value: "3 days ago" },
+        { label: "Pay expectation", value: "$155k" }, { label: "Can start in", value: "4 weeks" }
+      ],
+      skillChips: ["React", "TypeScript", "Mapbox", "Accessibility", "Node"].map(s => chip(s, cc.skills.includes(s))),
+      experience: [
+        { years: "2022 – now", role: cc.role, org: "Fielder Logistics" },
+        { years: "2019 – 2022", role: "Frontend Engineer", org: "Basalt Software" }
+      ]
+    } : { facts: [], skillChips: [], experience: [] };
+
+    const firstMsg = cc ? { me: true, text: "Hi " + cc.name.split(" ")[0] + "! Your mapping work lines up really well with what we're building. Free for a 20-minute chat this week?" } : null;
+    const rawThread = cc ? [firstMsg, ...(S.threads[cc.id] || [])] : [];
+    const thread = rawThread.map(m => m.me
+      ? { text: m.text, align: "flex-end", bg: "#3F8F24", fg: "#FFFFFF", edge: "#2E6B18", radius: "20px 20px 6px 20px" }
+      : { text: m.text, align: "flex-start", bg: "#FFFFFF", fg: INK, edge: "#E6D6AE", radius: "20px 20px 20px 6px" });
+
+    const notePrompts = [
+      ["Why this team", "Your work on the map is the closest thing to what I want to build next. "],
+      ["A project I'm proud of", "I shipped a clustered map view over 40k records last quarter and would love to walk you through it. "],
+      ["When I can start", "I can start within four weeks and I already live nearby. "]
+    ].map(([label, text]) => ({ label, insert: () => this.setState({ note: (this.state.note + text).slice(0, 400) }) }));
+
+    const recSummary = recs.length
+      ? "Morning, Maya! " + recs.length + (recs.length === 1 ? " posting fits" : " postings fit") + " your skills" + (recNear ? ", and " + recNear + " of them " + (recNear === 1 ? "is" : "are") + " close enough to walk to." : ".") + " I put those at the top of the board."
+      : "Hmm, nothing on the board matches all your skills with these filters. Try loosening one?";
+
+    return {
+      tabs, initials: "ME", toast: S.toast, stop: e => e.stopPropagation(), groundBg, groundDot, showGuide,
+      setSeeker: () => this.setState({ role: "seeker", screen: "search", openJob: null, openCand: null }),
+      setRecruiter: () => this.setState({ role: "recruiter", screen: "pipeline", openJob: null, openCand: null }),
+      seekerChipBg: role === "seeker" ? "#FFFFFF" : "transparent", seekerChipFg: role === "seeker" ? "#3A2A1C" : "#6B5540",
+      recruiterChipBg: role === "recruiter" ? "#FFFFFF" : "transparent", recruiterChipFg: role === "recruiter" ? "#3A2A1C" : "#6B5540",
+
+      isSearch: role === "seeker" && screen === "search", isCart: role === "seeker" && screen === "cart",
+      isApps: role === "seeker" && screen === "apps", isProfile: role === "seeker" && screen === "profile",
+      isPipeline: role === "recruiter" && screen === "pipeline", isCandidates: role === "recruiter" && screen === "candidates",
+      isPost: role === "recruiter" && screen === "post",
+
+      showList: view !== "map", showMap: view !== "list", viewModes, jobList,
+      noResults: jobList.length === 0, resultCount: filtered.length, nearbyCount: nearby.length,
+      showGuideRec: showGuide, recSummary,
+      pins: filtered.map(j => ({
+        left: j.left, top: j.top, label: j.salary.split("–")[0],
+        bg: inRange(j) ? "#3F8F24" : "#EFE3C2", fg: inRange(j) ? "#FFFFFF" : "#6B5540",
+        open: () => this.setState({ openJob: j.id, noteOpen: false })
+      })),
+      ringSize: (70 + S.radius * 3.4) + "px",
+
+      fQuery: S.q, onQuery: e => this.setState({ q: e.target.value }),
+      fLocation: S.loc, onLocation: e => this.setState({ loc: e.target.value }),
+      fMinSalary: S.minSalary, onSalary: e => this.setState({ minSalary: +e.target.value }), minSalaryLabel: "$" + S.minSalary + "k",
+      fRadius: S.radius, onRadius: e => this.setState({ radius: +e.target.value }), radiusLabel: S.radius + " mi",
+      skillFilters, setupOptions,
+      visaBg: S.visa ? "#F9D65C" : "#EFE3C2", visaEdge: S.visa ? "#D9A92C" : "#D9C59A",
+      visaBox: S.visa ? "#5B3B00" : "#B8A47E", visaDot: S.visa ? "#5B3B00" : "#FFFFFF", visaFg: S.visa ? "#5B3B00" : "#4A3726",
+      toggleVisa: () => this.setState({ visa: !S.visa }),
+      clearFilters: () => this.setState({ q: "", loc: "", minSalary: 60, setup: "any", visa: false, skills: [], radius: 10 }),
+
+      cartItems, compareRows, cartCount: cartItems.length, cartEmpty: cartItems.length === 0, cartHasItems: cartItems.length > 0,
+      clearCart: () => { this.setState({ cart: [] }); this.t("Pockets emptied."); },
+      applyAll: () => {
+        const next = { ...S.applied }; S.cart.forEach(id => { next[id] = true; });
+        this.setState({ applied: next, screen: "apps" });
+        this.t(S.cart.length + " letters sent! Check your Mailbox.");
+      },
+      goSearch: this.go("search"),
+
+      applications, stageCounts, appsSummary,
+      headline: S.headline, onHeadline: e => this.setState({ headline: e.target.value }),
+      mySkills: this.mySkills, privacyRows, privacySummary,
+      experience: [
+        { years: "2022 – now", role: "Frontend Engineer", org: "Fielder Logistics", detail: "Owned the planner map: clustering, radius filters, and offline tiles. Got the map view loading in under a second, down from 2.4s." },
+        { years: "2020 – 2022", role: "Software Engineer", org: "Basalt Software", detail: "Built the design system three product teams used, and ran the accessibility audits." }
+      ],
+
+      postSkills: ["React", "TypeScript", "Mapbox", "Accessibility"],
+      saveDraft: () => this.t("Draft saved. It's not on the board yet."),
+      publish: () => this.t("Pinned! Your posting is on the board."),
+      pipeline, candidates, clusters, savedSearches,
+      saveSearchLabel: S.searchSaved ? "Search saved" : "Save this search",
+      saveSearch: () => { this.setState({ searchSaved: true }); this.t("Saved! I'll tell you when new folks match."); },
+
+      jobOpen: !!dj, detail, closeJob: () => this.setState({ openJob: null, noteOpen: false }),
+      noteOpen: S.noteOpen, note: S.note, onNote: e => this.setState({ note: e.target.value.slice(0, 400) }), notePrompts,
+      cancelNote: () => { this.setState({ noteOpen: false, applied: { ...S.applied, [S.openJob]: true } }); this.t("Sent without a note."); },
+      submitNote: () => { this.setState({ noteOpen: false, applied: { ...S.applied, [S.openJob]: true } }); this.t("Sent with your note!"); },
+
+      candOpen: !!cc, cand, msgOpen: S.msgOpen, thread,
+      draft: S.draft, onDraft: e => this.setState({ draft: e.target.value }),
+      onDraftKey: e => { if (e.key === "Enter") this.sendMsg(); },
+      sendMsg: () => this.sendMsg(),
+      emailCand: () => cc && this.t("Email to " + cc.name.split(" ")[0] + " opened in your mail app."),
+      advanceCand: () => {
+        if (!cc) return;
+        const order = this.STAGES.map(s => s.label);
+        const i = order.indexOf(S.stages[cc.id]);
+        if (i >= 3) { this.t(cc.name.split(" ")[0] + " is already at " + order[i] + "."); return; }
+        this.setState({ stages: { ...S.stages, [cc.id]: order[i + 1] } });
+        this.t(cc.name.split(" ")[0] + " moved to " + order[i + 1] + "!");
+      },
+      closeCand: () => this.setState({ openCand: null, msgOpen: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

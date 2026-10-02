@@ -36,8 +36,11 @@ components/
   ProfileBlocks.tsx          Header (photo/name/…), About, Skills blocks
   ProfileSection.tsx         generic list block (experience/education/projects/links) with add/edit/remove
   RoleSelect.tsx             recruiter's "which opening" dropdown
-  SchematicMap.tsx           PLACEHOLDER map (see §7)
-  Toast.tsx  ui/*            small primitives: Avatar, Button, Card, Chip, Field(+FieldError), Notice, ProgressRail, Sheet, Toggle
+  SchematicMap.tsx           PLACEHOLDER map, drawn as an island (see §7)
+  Pip.tsx                    Pip the town clerk: PipAvatar (inline SVG) and PipBubble (speech bubble with name tag)
+  Toast.tsx                  toasts are spoken by Pip (avatar + white bubble, 2.6 s)
+  ui/*                       small primitives: Avatar, Button, Card, Chip, Field(+FieldError), Notice, PageHeading(+SectionTag),
+                             Sheet, Stage (StageStamp, StageProgress, StageCount), Toggle, Wood (job board / planter container)
 lib/
   api.ts                     the fetch wrapper (cookies, CSRF, errors, uploads)
   apiTypes.ts                TypeScript shapes of the API's JSON (Api*)
@@ -48,7 +51,8 @@ lib/
 state/
   AuthState.tsx              who is signed in
   AppState.tsx               shared UI + seeker data (filters, shortlist, applied, sheets, toast, …)
-design_handoff_job_marketplace/   the original design bundle (README, HTML prototype, screenshots). Reference only
+design_handoff_job_marketplace/        the original design bundle (README, HTML prototype, screenshots). Superseded
+design_handoff_job_marketplace_cozy/   the current "cozy" re-skin bundle the UI follows. Reference only
 ```
 
 ## 2. Routes and who can see them
@@ -65,8 +69,12 @@ design_handoff_job_marketplace/   the original design bundle (README, HTML proto
 `Guard` waits for the session check, sends visitors with no session to `/login?next=…`, and shows a polite "this page is for
 recruiter accounts" card to the wrong role. **The real enforcement is the backend** (403s) — the guard is just UX.
 
-**Navbar:** signed out (or while the session loads) → just **Search**, plus Sign in / Sign up. Seeker → Search, Shortlist (n),
-Applications. Recruiter → Pipeline, Candidates, Post a role. Profile and account links live in the avatar menu, not the nav.
+**Navbar:** signed out (or while the session loads) → just **Board**, plus Sign in / Sign up. Seeker → Board, Pockets · n,
+Mailbox, My house. Recruiter → Garden, Scouting, Post a role. Profile and account links are also in the avatar menu, along
+with the "Pip's tips" toggle.
+
+The cozy names map onto the routes like this (URLs did not change): Board = `/search`, Pockets = `/shortlist`,
+Mailbox = `/applications`, My house = `/profile`, Garden = `/recruiter/pipeline`, Scouting = `/recruiter/candidates`.
 
 ## 3. Talking to the backend — `lib/api.ts`
 
@@ -142,9 +150,35 @@ session; call it after changing something the navbar shows (name, photo).
 
 ## 6. Styling
 
-- **Design tokens** are CSS variables in `app/globals.css` under `@theme` (`--color-ink`, `--color-accent`, `--color-danger`, …),
-  which Tailwind exposes as classes (`text-muted`, `bg-accent-tint`, `border-line`, …). Use tokens, not raw hex.
-- **Fonts:** Instrument Sans + IBM Plex Mono via `next/font/google`.
+- **Theme:** the "cozy life-sim" re-skin from `design_handoff_job_marketplace_cozy/README.md` — paper cards, pill buttons,
+  grass/sand/sky/wood grounds, a guide character (Pip). Keep it original: no third-party characters, logos or game terms.
+- **Design tokens** are CSS variables in `app/globals.css` under `@theme` (`--color-ink`, `--color-accent`, `--color-paper`,
+  `--color-sun`, `--color-wood`, …), which Tailwind exposes as classes (`text-muted`, `bg-paper`, `bg-sun`, …). Use tokens, not
+  raw hex. The old names (`surface`, `accent`, `line`, …) still exist and point at the cozy palette.
+- **The drop edge:** raised things get a hard bottom shadow instead of a soft one, e.g. `shadow-[0_4px_0_var(--color-edge)]`,
+  and pressable things sink into it with `active:translate-y-[3px] active:shadow-none`. `Button`, `Chip` and `Card` do this already.
+- **Areas:** `AppShell` sets `data-area` (grass / sand / sky / wood) from the route; the ground colour, dot pattern, the neutral
+  edge colour (`--color-edge`) and the on-ground heading ink (`text-area-ink`, `text-area-ink-2`) follow it. Add new routes to
+  the `areas` list there.
+- **Pip's tips** (`showGuide` in `AppState`) is a per-browser preference in localStorage, read with `useSyncExternalStore`. When
+  it is off, Pip's recommendation bubbles are hidden (Scouting falls back to a plain notice); toasts still show.
+- **Fonts:** Fredoka (headings, buttons, chips, numbers — use `font-display`) + Nunito (body, weights 600–800) via `next/font/google`.
+  Body text defaults to weight 600; avoid 400 on cream.
+- **Motion** ([`motion`](https://motion.dev), `import … from "motion/react"`) does the animation. Shared springs and list
+  variants live in `lib/motion.ts`; reach for those instead of inventing new timings. What moves:
+  - Pages settle in on every route change (`AppShell`), and the ground colour fades between areas.
+  - Sheets slide in and out (`ui/Sheet.tsx` takes `open` and keeps its last content while it leaves, which is why `JobSheet`
+    and `CandidateSheet` pass the id down as a prop instead of reading it from state).
+  - Yellow selection pills glide between options (`ui/PillTrack.tsx`: header tabs, Board/Both/Map, work setup). It measures
+    the selected option inside its own container on purpose; a shared `layoutId` drifted whenever content above it moved.
+  - Lists stagger in and reshuffle with `layout` + `AnimatePresence mode="popLayout"`: job cards, candidates, skill chips.
+    In the Garden every card has a `layoutId`, so moving someone to the next stage carries their card to the new planter.
+  - Smaller touches: Pip hops in and speaks in a popping bubble, toasts bounce, stamps land, progress bars fill, map
+    pins drop, counts bounce when they change, the avatar menu unfolds, toggles spring, and landing sections rise into view (`Reveal`).
+- **Reduced motion:** `AppShell` wraps everything in `<MotionConfig reducedMotion="user">`, so people who ask for less motion
+  get fades only. CSS-only effects follow suit: the tilt and hover lift on pinned job cards (`.pinned` in `globals.css`) and
+  the "you are here" ping on the map are off under `prefers-reduced-motion`. Don't branch rendering on `useReducedMotion()`:
+  the server can't see the setting, so it causes hydration mismatches. Use it only inside effects.
 - ⚠️ **Base styles must live in `@layer base`.** The global `a` / `button` color rules used to be unlayered, and unlayered CSS beats
   Tailwind utilities — so `text-ground` on primary buttons and `text-muted` on nav links were silently ignored. They're layered now;
   don't add unlayered element styles.
@@ -154,7 +188,9 @@ session; call it after changing something the navbar shows (name, photo).
 
 ## 7. What's mocked / placeholder
 
-Nothing is mocked any more — with **one exception, the map**: `SchematicMap.tsx` is a static grid with a fake road/water backdrop.
+Nothing is mocked any more — with **one exception, the map**: `SchematicMap.tsx` is a static island illustration (water, beach,
+dotted land). When a real map replaces it, keep the pin, walking-distance ring and cluster-bubble styles and tint the map toward
+the island palette (`--color-map-*`).
 Pins and cluster bubbles are positioned by squeezing real coordinates into a fixed Austin-area box (`projectToMap` in `adapters.ts`),
 and the commute "ring" is decorative (not to scale). Replacing it with a real map library (Leaflet/OpenStreetMap) is the most
 valuable next frontend task and unlocks user stories 7, 8, 18 and 19. Remote roles and jobs without coordinates get no pin.

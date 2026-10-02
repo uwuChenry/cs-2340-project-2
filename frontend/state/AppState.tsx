@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { http, messageOf } from "@/lib/api";
 import type { ApiApplication, ApiApplyAllResult, ApiProfile, ApiShortlistItem } from "@/lib/apiTypes";
@@ -28,6 +28,38 @@ type SeekerData = {
   applied: Record<string, boolean>;
   skills: string[];
 };
+
+// Whether Pip's recommendation bubbles show. A per-browser preference, so it
+// lives in localStorage; read through useSyncExternalStore so the server render
+// (which can't see it) and the first client render agree.
+const GUIDE_KEY = "roster.showGuide";
+const guideListeners = new Set<() => void>();
+
+function readShowGuide(): boolean {
+  try {
+    return window.localStorage.getItem(GUIDE_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+function subscribeShowGuide(listener: () => void) {
+  guideListeners.add(listener);
+  window.addEventListener("storage", listener);
+  return () => {
+    guideListeners.delete(listener);
+    window.removeEventListener("storage", listener);
+  };
+}
+
+function writeShowGuide(on: boolean) {
+  try {
+    window.localStorage.setItem(GUIDE_KEY, on ? "on" : "off");
+  } catch {
+    // Storage blocked (private mode etc.): the toggle just won't stick.
+  }
+  guideListeners.forEach((listener) => listener());
+}
 
 const NO_JOBS: Job[] = [];
 const NO_IDS: string[] = [];
@@ -85,6 +117,10 @@ type AppStateValue = {
   dataVersion: number;
   bumpData: () => void;
 
+  // Pip's recommendation bubbles. Some people find the character distracting.
+  showGuide: boolean;
+  setShowGuide: (on: boolean) => void;
+
   toast: string;
   showToast: (msg: string) => void;
 };
@@ -110,6 +146,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const [recruiterJobId, setRecruiterJobId] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+
+  const showGuide = useSyncExternalStore(subscribeShowGuide, readShowGuide, () => true);
 
   const [toast, setToast] = useState("");
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,7 +203,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       return false;
     }
     if (user.role !== "job_seeker") {
-      showToast("Only job seeker accounts can do that");
+      showToast("Only job seeker accounts can do that one.");
       return false;
     }
     return true;
@@ -185,7 +223,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const resetFilters = useCallback(() => setFilters(initialFilters), []);
 
   async function toggleCart(job: Job) {
-    if (!requireSeeker("save roles to your shortlist")) return;
+    if (!requireSeeker("put postings in your pockets")) return;
     const has = shortlist.some((j) => j.id === job.id);
     // Optimistic: flip it immediately, then undo if the server refuses.
     updateSeeker((d) => ({
@@ -195,7 +233,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     try {
       if (has) await http.delete(`/api/shortlist/${job.id}/`);
       else await http.post("/api/shortlist/", { job: Number(job.id) });
-      showToast(has ? "Removed from shortlist" : "Added to shortlist");
+      showToast(has ? "Took it out of your pockets." : "Tucked it in your pockets!");
     } catch (e) {
       updateSeeker((d) => ({
         ...d,
@@ -206,11 +244,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }
 
   async function clearCart() {
-    if (!requireSeeker("manage your shortlist")) return;
+    if (!requireSeeker("manage your pockets")) return;
     try {
       await http.delete("/api/shortlist/clear/");
       updateSeeker((d) => ({ ...d, shortlist: [] }));
-      showToast("Shortlist cleared");
+      showToast("Pockets emptied.");
     } catch (e) {
       showToast(messageOf(e));
     }
@@ -240,7 +278,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }));
       setOpenJobId(jobId);
       setNoteOpen(true);
-      showToast(`Applied to ${application.company} — add a note?`);
+      showToast(`Sent to ${application.company}! Want to add a note?`);
     } catch (e) {
       showToast(messageOf(e));
     }
@@ -260,8 +298,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         },
         shortlist: d.shortlist.filter((j) => !jobIds.includes(j.id)),
       }));
-      const skipped = result.alreadyApplied ? ` (${result.alreadyApplied} already applied)` : "";
-      showToast(`${result.created} applications sent${skipped}`);
+      const skipped = result.alreadyApplied ? ` (${result.alreadyApplied} were already sent)` : "";
+      showToast(`${result.created} ${result.created === 1 ? "letter" : "letters"} sent${skipped}! Check your Mailbox.`);
       return true;
     } catch (e) {
       showToast(messageOf(e));
@@ -275,7 +313,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
 
   const cancelNote = useCallback(() => {
     setNoteOpen(false);
-    showToast("Application sent without a note");
+    showToast("Sent without a note.");
   }, [showToast]);
 
   // The application already exists by the time the note box opens (apply is
@@ -286,13 +324,13 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     const text = note.trim();
     if (!text) {
       setNoteOpen(false);
-      showToast("Application sent without a note");
+      showToast("Sent without a note.");
       return;
     }
     try {
       await http.post("/api/applications/apply/", { job: Number(openJobId), note: text });
       setNoteOpen(false);
-      showToast("Application sent with your note");
+      showToast("Sent with your note!");
     } catch (e) {
       showToast(messageOf(e));
     }
@@ -351,6 +389,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setRecruiterJobId,
     dataVersion,
     bumpData,
+    showGuide,
+    setShowGuide: writeShowGuide,
     toast,
     showToast,
   };

@@ -2,19 +2,20 @@ import type { ButtonHTMLAttributes } from "react";
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   selected?: boolean;
+  // A suggestion to add something, e.g. the note prompts: white with a dashed outline.
   dashed?: boolean;
 };
 
 export default function Chip({ selected = false, dashed = false, className = "", ...props }: Props) {
   const tone = selected
-    ? "bg-accent-tint text-accent border-accent-border"
+    ? "bg-sun text-sun-ink shadow-[0_3px_0_var(--color-sun-edge)]"
     : dashed
-      ? "bg-surface text-accent border-accent-border border-dashed"
-      : "bg-surface text-ink-3 border-line-strong";
+      ? "bg-paper text-ink-3 border-2 border-dashed border-line-strong"
+      : "bg-paper text-ink-3 shadow-[0_3px_0_#D9C59A]";
 
   return (
     <button
-      className={`rounded-full border px-2.5 py-[5px] text-[12.5px] cursor-pointer transition-colors duration-150 ${tone} ${className}`}
+      className={`rounded-full px-3 py-[5px] font-display text-[13px] font-semibold cursor-pointer active:translate-y-[2px] active:shadow-none ${tone} ${className}`}
       {...props}
     />
   );

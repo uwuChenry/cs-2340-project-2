@@ -35,6 +35,9 @@ type Props<T extends { id: number }> = {
 
 type Editing = "new" | number | null;
 
+const addClass =
+  "font-display text-[14px] font-semibold text-muted bg-white border-2 border-dashed border-line-strong rounded-full px-[13px] py-1 cursor-pointer hover:text-ink";
+
 /**
  * One repeating part of a profile (jobs, schools, links, projects).
  *
@@ -130,7 +133,7 @@ export default function ProfileSection<T extends { id: number }>({
   }
 
   const editor = (
-    <div className="bg-surface-sunken border border-line rounded-[11px] p-4">
+    <div className="bg-white rounded-[18px] p-4 shadow-[0_3px_0_var(--color-line)]">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
         {fields.map((field) => (
           <div key={field.key} className={field.wide || field.kind === "textarea" ? "sm:col-span-2" : ""}>
@@ -153,7 +156,7 @@ export default function ProfileSection<T extends { id: number }>({
                 placeholder={field.placeholder}
               />
             )}
-            {field.hint && !errors[field.key] && <p className="m-0 mt-1 text-[12px] text-muted-2">{field.hint}</p>}
+            {field.hint && !errors[field.key] && <p className="m-0 mt-1 text-[12.5px] font-semibold text-muted-2">{field.hint}</p>}
             <FieldError messages={errors[field.key]} />
           </div>
         ))}
@@ -182,14 +185,14 @@ export default function ProfileSection<T extends { id: number }>({
     >
       {items.length === 0 && editing !== "new" && (
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className="m-0 text-[13.5px] text-muted">{emptyText}</p>
+          <p className="m-0 text-[14px] font-bold text-muted">{emptyText}</p>
           {!managing && (
             <button
               onClick={() => {
                 setManaging(true);
                 open();
               }}
-              className="border-0 bg-transparent p-0 text-[13px] text-accent cursor-pointer hover:underline"
+              className={addClass}
             >
               + {addLabel}
             </button>
@@ -205,13 +208,13 @@ export default function ProfileSection<T extends { id: number }>({
             <div key={item.id} className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">{renderItem(item)}</div>
               {managing && (
-                <div className="shrink-0 flex gap-3 text-[12.5px]">
-                  <button onClick={() => open(item)} className="border-0 bg-transparent p-0 text-muted underline cursor-pointer hover:text-ink">
+                <div className="shrink-0 flex gap-3">
+                  <Button variant="link" onClick={() => open(item)}>
                     Edit
-                  </button>
-                  <button onClick={() => remove(item)} className="border-0 bg-transparent p-0 text-muted underline cursor-pointer hover:text-danger">
+                  </Button>
+                  <Button variant="link" onClick={() => remove(item)} className="hover:!text-danger">
                     Remove
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
@@ -221,10 +224,7 @@ export default function ProfileSection<T extends { id: number }>({
       </div>
 
       {managing && editing !== "new" && (
-        <button
-          onClick={() => open()}
-          className={`${items.length ? "mt-4" : "mt-3"} border-0 bg-transparent p-0 text-[13px] text-accent cursor-pointer hover:underline`}
-        >
+        <button onClick={() => open()} className={`${items.length ? "mt-4" : "mt-3"} ${addClass}`}>
           + {addLabel}
         </button>
       )}

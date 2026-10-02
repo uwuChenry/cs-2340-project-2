@@ -1,8 +1,10 @@
 "use client";
 
 import { type KeyboardEvent, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { http, messageOf } from "@/lib/api";
 import type { ApiRecruiterJob } from "@/lib/apiTypes";
+import { springBouncy } from "@/lib/motion";
 import { useAsync } from "@/lib/useAsync";
 import { useAppState } from "@/state/AppState";
 import Guard from "@/components/Guard";
@@ -10,6 +12,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Label, Select, TextArea, TextInput } from "@/components/ui/Field";
 import Notice from "@/components/ui/Notice";
+import PageHeading from "@/components/ui/PageHeading";
 import { SingleLocationMap } from "@/components/SchematicMap";
 
 type Setup = "hybrid" | "remote" | "on_site";
@@ -111,7 +114,7 @@ function PostRole() {
     const range = parseRange(form.baseRange);
     const place = parseAddress(form.address);
     if (!form.title.trim()) return setProblem("Give the role a title.");
-    if (!range) return setProblem("Enter the base range like $150k — $185k.");
+    if (!range) return setProblem("Enter the pay range like $150k – $185k.");
     if (!place) return setProblem("Add an address or at least a city.");
     if (status === "published" && !form.description.trim()) return setProblem("Add a description before publishing.");
 
@@ -136,7 +139,7 @@ function PostRole() {
       setEditingId(saved.id);
       openings.reload();
       bumpData();
-      showToast(status === "published" ? "Opening published" : "Draft saved");
+      showToast(status === "published" ? "Pinned! Your posting is on the board." : "Draft saved. It's not on the board yet.");
     } catch (e) {
       setProblem(messageOf(e));
     } finally {
@@ -148,36 +151,35 @@ function PostRole() {
 
   return (
     <div>
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Openings</div>
-      <h1 className="m-0 mb-5 text-[30px] font-semibold tracking-[-0.025em]">
-        {editingId ? "Edit role" : "Post a role"}
-      </h1>
+      <PageHeading tag="Pin a posting" title={editingId ? "Edit posting" : "Post a role"} className="mb-[22px]" />
 
-      <div className="flex flex-wrap gap-[18px] items-start">
-        <Card padding="none" className="flex-[3_1_400px] min-w-0 p-[22px]">
+      <div className="flex flex-wrap gap-5 items-start">
+        <Card padding="none" className="flex-[3_1_420px] min-w-0 p-6">
           <div className="grid gap-4">
             <div>
-              <Label>Role title</Label>
+              <Label htmlFor="post-title">Role title</Label>
               <TextInput
+                id="post-title"
                 value={form.title}
                 onChange={(e) => set("title", e.target.value)}
                 placeholder="e.g. Senior Frontend Engineer"
-                className="!text-[14.5px] !py-2.5"
+                className="!text-[15px] !font-bold"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3.5">
+            <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))" }}>
               <div>
-                <Label>Base range</Label>
+                <Label htmlFor="post-range">Pay range</Label>
                 <TextInput
+                  id="post-range"
                   value={form.baseRange}
                   onChange={(e) => set("baseRange", e.target.value)}
-                  placeholder="$150k — $185k"
-                  className="!text-[14.5px] !py-2.5"
+                  placeholder="$150k – $185k"
+                  className="!text-[15px] !font-bold"
                 />
               </div>
               <div>
-                <Label>Work setup</Label>
-                <Select value={form.setup} onChange={(e) => set("setup", e.target.value as Setup)}>
+                <Label htmlFor="post-setup">Work setup</Label>
+                <Select id="post-setup" value={form.setup} onChange={(e) => set("setup", e.target.value as Setup)} className="!text-[15px] !font-bold">
                   {setupOptions.map((o) => (
                     <option key={o.value} value={o.value}>
                       {o.label}
@@ -187,30 +189,41 @@ function PostRole() {
               </div>
             </div>
             <div>
-              <Label>Required skills</Label>
-              <div className="flex flex-wrap gap-1.5 p-2.5 border border-line-strong rounded-lg bg-surface-sunken">
+              <Label htmlFor="post-skill">Skills you need</Label>
+              <div className="flex flex-wrap gap-[7px] p-2.5 border-2 border-line rounded-[14px] bg-white has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-sun">
+                <AnimatePresence initial={false} mode="popLayout">
                 {form.skills.map((s) => (
-                  <span
+                  <motion.button
                     key={s}
+                    layout
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.5 }}
+                    transition={springBouncy}
+                    type="button"
                     onClick={() => set("skills", form.skills.filter((sk) => sk !== s))}
-                    className="text-[12.5px] bg-accent-tint text-accent rounded-md px-[9px] py-1 cursor-pointer"
+                    className="border-0 font-display text-[13.5px] font-semibold bg-success-bg text-accent-deep rounded-full px-[11px] py-[3px] cursor-pointer"
                     title="Remove skill"
+                    aria-label={`Remove ${s}`}
                   >
-                    {s}
-                  </span>
+                    {s} ×
+                  </motion.button>
                 ))}
+                </AnimatePresence>
                 <input
+                  id="post-skill"
                   value={skillDraft}
                   onChange={(e) => setSkillDraft(e.target.value)}
                   onKeyDown={addSkill}
-                  placeholder="Add skill…"
-                  className="border-0 bg-transparent outline-none text-[13px] flex-1 min-w-[80px]"
+                  placeholder="Add skill, then Enter…"
+                  className="border-0 bg-transparent outline-none text-[14px] font-semibold flex-1 min-w-[90px]"
                 />
               </div>
             </div>
             <div>
-              <Label>Description</Label>
+              <Label htmlFor="post-description">Description</Label>
               <TextArea
+                id="post-description"
                 rows={5}
                 value={form.description}
                 onChange={(e) => set("description", e.target.value)}
@@ -220,69 +233,68 @@ function PostRole() {
 
             {problem && <Notice tone="error">{problem}</Notice>}
 
-            <div className="flex gap-2.5 justify-end border-t border-line-soft pt-4">
+            <div className="flex flex-wrap gap-2.5 justify-end border-t-2 border-dashed border-line pt-[18px]">
               <Button variant="secondary" size="md" disabled={saving} onClick={() => submit("draft")}>
                 Save draft
               </Button>
               <Button variant="primary" size="md" disabled={saving} onClick={() => submit("published")}>
-                {editingId ? "Save and publish" : "Publish opening"}
+                {editingId ? "Save and pin it" : "Pin it to the board"}
               </Button>
             </div>
           </div>
         </Card>
 
-        <div className="flex-[1_1_300px] min-w-0 max-w-[400px] flex flex-col gap-3.5">
+        <div className="flex-[1_1_300px] min-w-0 max-w-[420px] flex flex-col gap-4">
           <Card padding="none" className="p-[18px]">
-            <h2 className="m-0 mb-1 text-[15px] font-semibold">Office location</h2>
-            <p className="m-0 mb-3.5 text-[13px] text-muted leading-[1.5]">
-              Candidates see this address on the role. The pin is placed automatically from the address you type below.
+            <h2 className="m-0 mb-1 font-display text-[19px] font-semibold text-ink">Office location</h2>
+            <p className="m-0 mb-3.5 text-[14px] font-semibold text-muted leading-[1.5]">
+              The pin candidates see on the map. It&rsquo;s placed from the address you type below.
             </p>
-            <SingleLocationMap address={form.address.split(",")[0] || "Add an address"} height={230} />
+            <SingleLocationMap address={form.address.split(",")[0] || "Add an address"} height={240} />
             <TextInput
               value={form.address}
               onChange={(e) => set("address", e.target.value)}
               placeholder="1104 Rio Grande St, Austin, TX"
-              className="mt-3 !text-[13.5px]"
+              aria-label="Office address"
+              className="mt-3 !font-bold"
             />
           </Card>
 
           <Card padding="none" className="p-[18px]">
-            <div className="flex items-center justify-between mb-2.5">
-              <h2 className="m-0 text-[15px] font-semibold">Your openings</h2>
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="m-0 font-display text-[19px] font-semibold text-ink">Your postings</h2>
               {editingId && (
-                <button
-                  onClick={() => startEditing(null)}
-                  className="border-0 bg-transparent p-0 text-[13px] text-accent cursor-pointer"
-                >
-                  + New role
-                </button>
+                <Button variant="paper" onClick={() => startEditing(null)}>
+                  + New posting
+                </Button>
               )}
             </div>
             {openings.error && <Notice tone="error">{openings.error}</Notice>}
             {list.length === 0 && !openings.error && (
-              <p className="m-0 text-[13px] text-muted">{openings.loading ? "Loading…" : "Nothing posted yet."}</p>
+              <p className="m-0 text-[14px] font-bold text-muted">{openings.loading ? "Looking at the board…" : "Nothing pinned yet."}</p>
             )}
             <div className="flex flex-col">
               {list.map((job) => (
                 <button
                   key={job.id}
                   onClick={() => startEditing(job)}
-                  className={`text-left border-0 border-b border-line-soft last:border-b-0 py-2.5 cursor-pointer flex items-center justify-between gap-3 ${
-                    job.id === editingId ? "bg-accent-tint-2 -mx-2 px-2 rounded-lg" : "bg-transparent"
+                  aria-current={job.id === editingId ? "true" : undefined}
+                  className={`text-left border-0 border-b-2 border-dashed border-line-tag last:border-b-0 py-2.5 cursor-pointer flex items-center justify-between gap-3 ${
+                    job.id === editingId ? "bg-sun/40 -mx-2 px-2 rounded-xl" : "bg-transparent"
                   }`}
                 >
                   <span className="min-w-0">
-                    <span className="block text-[13.5px] whitespace-nowrap overflow-hidden text-ellipsis">{job.title}</span>
-                    <span className="block text-[11.5px] text-muted-2 mt-0.5">
+                    <span className="block text-[14px] font-extrabold text-ink-2 whitespace-nowrap overflow-hidden text-ellipsis">{job.title}</span>
+                    <span className="block text-[12.5px] font-bold text-muted-2 mt-0.5">
                       {job.applicantCount} applicant{job.applicantCount === 1 ? "" : "s"}
                     </span>
                   </span>
                   <span
-                    className={`shrink-0 font-mono text-[10.5px] tracking-[0.06em] uppercase rounded-md px-[7px] py-[3px] ${
-                      job.status === "published" ? "text-success bg-success-bg" : "text-muted bg-tag-fill"
+                    className={`shrink-0 font-display text-[12px] font-semibold rounded-full px-[9px] py-0.5 ${
+                      job.status === "published" ? "text-white bg-accent" : "text-ink-3 bg-tan"
                     }`}
                   >
-                    {job.status}
+                    {job.status === "published" ? "On the board" : job.status === "draft" ? "Draft" : "Closed"}
                   </span>
                 </button>
               ))}

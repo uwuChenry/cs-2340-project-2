@@ -5,16 +5,24 @@ import { useState } from "react";
 type AvatarProps = {
   initials: string;
   size?: number;
-  radius?: "circle" | "square";
   fontSize?: number;
   // A profile photo. Falls back to the initials if it is missing or fails to load.
   src?: string | null;
+  // Raised avatars (header, profile, candidate cards) sit on a drop edge.
+  raised?: boolean;
 };
 
-export function Avatar({ initials, size = 32, radius = "circle", fontSize, src }: AvatarProps) {
+// Round, with a white border: peach with brown initials, or the photo.
+export function Avatar({ initials, size = 32, fontSize, src, raised = false }: AvatarProps) {
   // Remember which URL failed, so a new upload (a new URL) gets a fresh attempt.
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const borderRadius = radius === "circle" ? "50%" : Math.max(6, Math.round(size / 4.5));
+  const border = size >= 60 ? 4 : size >= 30 ? 3 : 2;
+  const style = {
+    width: size,
+    height: size,
+    borderWidth: border,
+    boxShadow: raised ? "0 3px 0 var(--color-edge)" : undefined,
+  };
 
   if (src && src !== failedSrc) {
     return (
@@ -26,21 +34,16 @@ export function Avatar({ initials, size = 32, radius = "circle", fontSize, src }
         src={src}
         alt=""
         onError={() => setFailedSrc(src)}
-        className="shrink-0 object-cover border border-accent-border-3"
-        style={{ width: size, height: size, borderRadius }}
+        className="shrink-0 object-cover rounded-full border-solid border-white bg-peach"
+        style={style}
       />
     );
   }
 
   return (
     <div
-      className="flex items-center justify-center shrink-0 bg-accent-tint-3 border border-accent-border-3 text-accent font-semibold"
-      style={{
-        width: size,
-        height: size,
-        borderRadius,
-        fontSize: fontSize ?? Math.max(10, Math.round(size * 0.37)),
-      }}
+      className="flex items-center justify-center shrink-0 rounded-full border-solid border-white bg-peach text-peach-ink font-display font-semibold"
+      style={{ ...style, fontSize: fontSize ?? Math.max(10, Math.round(size * 0.34)) }}
     >
       {initials}
     </div>
@@ -53,17 +56,11 @@ type CompanyMarkProps = {
   size?: number;
 };
 
-export function CompanyMark({ mark, bg, size = 26 }: CompanyMarkProps) {
+export function CompanyMark({ mark, bg, size = 30 }: CompanyMarkProps) {
   return (
     <div
-      className="flex items-center justify-center shrink-0 text-white font-semibold"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: Math.max(6, Math.round(size / 3.7)),
-        background: bg,
-        fontSize: Math.max(9, Math.round(size * 0.42)),
-      }}
+      className="flex items-center justify-center shrink-0 rounded-full text-white font-display font-semibold"
+      style={{ width: size, height: size, background: bg, fontSize: Math.max(10, Math.round(size * 0.38)) }}
     >
       {mark}
     </div>

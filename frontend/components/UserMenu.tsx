@@ -2,9 +2,13 @@
 
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "motion/react";
+import { springBouncy } from "@/lib/motion";
 import type { ApiRole, ApiSessionUser } from "@/lib/apiTypes";
+import { useAppState } from "@/state/AppState";
 import { initialsOf } from "@/state/AuthState";
 import { Avatar } from "./ui/Avatar";
+import Toggle from "./ui/Toggle";
 
 const roleLabels: Record<ApiRole, string> = {
   job_seeker: "Job seeker",
@@ -13,13 +17,15 @@ const roleLabels: Record<ApiRole, string> = {
 };
 
 const itemClass =
-  "block w-full text-left px-3.5 py-2 text-[13.5px] text-ink no-underline hover:no-underline hover:bg-hover-fill focus:bg-hover-fill focus:outline-none cursor-pointer border-0 bg-transparent";
+  "block w-full text-left px-4 py-2 text-[14px] font-bold text-ink-2 no-underline hover:no-underline hover:text-ink hover:bg-tan focus:bg-tan focus:outline-none cursor-pointer border-0 bg-transparent";
 
 /**
  * The avatar in the corner of the navbar, and the menu it opens: who you are and
- * what kind of account it is, then view profile, account settings and sign out.
+ * what kind of account it is, then view profile, account settings, whether Pip
+ * shows tips, and sign out.
  */
 export default function UserMenu({ user, onSignOut }: { user: ApiSessionUser; onSignOut: () => void }) {
+  const { showGuide, setShowGuide } = useAppState();
   const [open, setOpen] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
   const trigger = useRef<HTMLButtonElement>(null);
@@ -71,24 +77,32 @@ export default function UserMenu({ user, onSignOut }: { user: ApiSessionUser; on
         aria-label="Account menu"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="block rounded-full border-0 bg-transparent p-0 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="block rounded-full border-0 bg-transparent p-0 cursor-pointer"
       >
-        <Avatar initials={initialsOf(user.name)} src={user.photoUrl} size={34} />
+        <Avatar initials={initialsOf(user.name)} src={user.photoUrl} size={38} raised />
       </button>
 
+      <AnimatePresence>
       {open && (
-        <div
+        <motion.div
+          key="menu"
           ref={menu}
           role="menu"
           aria-label="Account"
           onKeyDown={onMenuKeyDown}
-          className="absolute right-0 top-[calc(100%+8px)] z-50 w-[240px] overflow-hidden rounded-xl border border-line bg-surface shadow-[0_12px_32px_rgba(26,25,23,0.14)]"
+          // Unfolds from the avatar it hangs off.
+          initial={{ opacity: 0, scale: 0.85, y: -8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: -6, transition: { duration: 0.14 } }}
+          transition={springBouncy}
+          style={{ transformOrigin: "calc(100% - 19px) 0" }}
+          className="absolute right-0 top-[calc(100%+10px)] z-50 w-[260px] overflow-hidden rounded-[20px] bg-paper shadow-[0_5px_0_#D9C59A,0_14px_30px_rgba(60,35,15,0.16)]"
         >
-          <div className="px-3.5 py-3 border-b border-line-soft">
-            <div className="text-[14px] font-semibold tracking-[-0.01em] whitespace-nowrap overflow-hidden text-ellipsis">
+          <div className="px-4 py-3 border-b-2 border-dashed border-line">
+            <div className="font-display text-[16px] font-semibold text-ink whitespace-nowrap overflow-hidden text-ellipsis">
               {user.name}
             </div>
-            <div className="mt-0.5 text-[12.5px] text-muted-2">{user.role ? roleLabels[user.role] : "Account"}</div>
+            <div className="mt-0.5 text-[12.5px] font-bold text-muted-2">{user.role ? roleLabels[user.role] : "Account"}</div>
           </div>
 
           <div className="py-1.5">
@@ -102,7 +116,22 @@ export default function UserMenu({ user, onSignOut }: { user: ApiSessionUser; on
             </Link>
           </div>
 
-          <div className="py-1.5 border-t border-line-soft">
+          <div className="py-1.5 border-t-2 border-dashed border-line">
+            <button
+              role="menuitemcheckbox"
+              aria-checked={showGuide}
+              onClick={() => setShowGuide(!showGuide)}
+              className={`${itemClass} flex items-center justify-between gap-3`}
+            >
+              <span>
+                <span className="block">Pip&rsquo;s tips</span>
+                <span className="block text-[12px] text-muted-2">Recommendations from the town clerk</span>
+              </span>
+              <Toggle on={showGuide} />
+            </button>
+          </div>
+
+          <div className="py-1.5 border-t-2 border-dashed border-line">
             <button
               role="menuitem"
               onClick={() => {
@@ -114,8 +143,9 @@ export default function UserMenu({ user, onSignOut }: { user: ApiSessionUser; on
               Sign out
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
     </div>
   );
 }

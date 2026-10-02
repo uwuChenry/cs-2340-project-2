@@ -1,12 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { distanceLabel, salaryLabel, setupLabel } from "@/lib/derive";
+import { motion } from "motion/react";
+import { salaryLabel, setupLabel } from "@/lib/derive";
+import { springBouncy, springSoft } from "@/lib/motion";
 import { useAppState } from "@/state/AppState";
 import Guard from "@/components/Guard";
 import { CompanyMark } from "@/components/ui/Avatar";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
+import PageHeading from "@/components/ui/PageHeading";
 
 type CompareCell = { text: string; strong?: boolean };
 
@@ -25,67 +28,81 @@ function Shortlist() {
   const isEmpty = cartItems.length === 0;
 
   const rows: { label: string; cells: CompareCell[] }[] = [
-    { label: "Base salary", cells: cartItems.map((c) => ({ text: salaryLabel(c), strong: true })) },
+    { label: "Pay", cells: cartItems.map((c) => ({ text: salaryLabel(c), strong: true })) },
     { label: "Location", cells: cartItems.map((c) => ({ text: c.location })) },
     { label: "Work setup", cells: cartItems.map((c) => ({ text: setupLabel(c) })) },
-    { label: "Distance", cells: cartItems.map((c) => ({ text: distanceLabel(c) })) },
-    { label: "Visa sponsorship", cells: cartItems.map((c) => ({ text: c.visa ? "Yes" : "Not offered" })) },
+    {
+      label: "Distance",
+      cells: cartItems.map((c) => ({
+        text: c.distanceMi === 0 ? "Work from anywhere" : c.distanceMi === null ? "Distance unknown" : `${c.distanceMi} mi from home`,
+      })),
+    },
+    { label: "Visa sponsorship", cells: cartItems.map((c) => ({ text: c.visa ? "Yes" : "No" })) },
     { label: "Skill match", cells: cartItems.map((c) => ({ text: `${c.matchPct}% match`, strong: true })) },
     { label: "Posted", cells: cartItems.map((c) => ({ text: c.posted })) },
   ];
 
   return (
     <div>
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Shortlist</div>
-      <h1 className="m-0 mb-1.5 text-[30px] font-semibold tracking-[-0.025em]">Compare before you apply</h1>
-      <p className="m-0 mb-[22px] text-[15px] text-muted max-w-[560px] leading-[1.55]">
-        {cartItems.length} roles collected. Side-by-side on the things you said matter, then send applications in
-        one pass.
-      </p>
+      <PageHeading
+        tag="Your pockets"
+        title="Compare before you apply"
+        sub={
+          seekerReady
+            ? `${cartItems.length} ${cartItems.length === 1 ? "posting" : "postings"} tucked away. Look at them side by side, then send them all off at once.`
+            : undefined
+        }
+        className="mb-[22px]"
+      />
 
       {!seekerReady ? (
-        <p className="text-[14px] text-muted">Loading your shortlist…</p>
+        <p className="text-[15px] font-bold text-area-ink-2">Turning out your pockets…</p>
       ) : isEmpty ? (
-        <Card className="border-dashed border-line-strong text-center" padding="none">
-          <div className="py-[46px] px-[46px]">
-            <p className="m-0 mb-3.5 text-[15px] text-muted">Nothing saved yet.</p>
-            <Button variant="primary" size="md" onClick={() => router.push("/search")}>
-              Browse roles
-            </Button>
-          </div>
+        <Card padding="none" className="p-12 text-center">
+          <motion.p
+            initial={{ opacity: 0, scale: 0.8, rotate: -3 }}
+            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+            transition={springBouncy}
+            className="m-0 mb-4 font-display text-[20px] font-semibold text-ink"
+          >
+            Your pockets are empty!
+          </motion.p>
+          <Button variant="primary" size="md" onClick={() => router.push("/search")}>
+            Go to the board
+          </Button>
         </Card>
       ) : (
         <div>
-          <div className="bg-surface border border-line rounded-xl overflow-x-auto">
-            <div
-              className="grid min-w-full"
-              style={{ gridTemplateColumns: `150px repeat(${cartItems.length}, minmax(200px, 1fr))` }}
-            >
-              <div className="px-4 py-[18px] border-b border-line" />
-              {cartItems.map((c) => (
-                <div key={c.id} className="px-4 py-[18px] border-b border-line border-l border-line-soft">
+          <Card padding="none" className="overflow-x-auto">
+            <div className="grid min-w-full" style={{ gridTemplateColumns: `160px repeat(${cartItems.length}, minmax(210px, 1fr))` }}>
+              <div className="px-[18px] py-5 border-b-2 border-dashed border-line" />
+              {cartItems.map((c, i) => (
+                <motion.div
+                  key={c.id}
+                  initial={{ opacity: 0, y: -12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ ...springSoft, delay: i * 0.06 }}
+                  className="px-[18px] py-5 border-b-2 border-dashed border-line border-l-2 border-l-line-soft"
+                >
                   <div className="flex items-center gap-2 mb-2">
-                    <CompanyMark mark={c.mark} bg={c.logoBg} size={22} />
-                    <span className="text-[12.5px] text-muted">{c.company}</span>
+                    <CompanyMark mark={c.mark} bg={c.logoBg} size={28} />
+                    <span className="text-[13px] font-extrabold text-muted">{c.company}</span>
                   </div>
-                  <div className="text-[15px] font-semibold tracking-[-0.01em] leading-[1.3]">{c.title}</div>
-                  <button
-                    onClick={() => toggleCart(c)}
-                    className="mt-2.5 border-0 bg-transparent p-0 text-[12.5px] text-muted-2 underline cursor-pointer"
-                  >
-                    Remove
-                  </button>
-                </div>
+                  <div className="font-display text-[18px] font-semibold leading-[1.25] text-ink">{c.title}</div>
+                  <Button variant="link" className="mt-2.5" onClick={() => toggleCart(c)}>
+                    Take out
+                  </Button>
+                </motion.div>
               ))}
 
               {rows.map((row) => (
                 <div key={row.label} className="contents">
-                  <div className="px-4 py-[13px] border-b border-line-soft text-[12.5px] text-muted">{row.label}</div>
+                  <div className="px-[18px] py-[13px] border-b-2 border-line-soft text-[13px] font-extrabold text-muted">{row.label}</div>
                   {row.cells.map((cell, i) => (
                     <div
                       key={i}
-                      className={`px-4 py-[13px] border-b border-line-soft border-l border-line-soft text-[13.5px] ${
-                        cell.strong ? "font-semibold text-ink" : "font-normal text-ink-3"
+                      className={`px-[18px] py-[13px] border-b-2 border-line-soft border-l-2 border-l-line-soft text-[14.5px] ${
+                        cell.strong ? "font-extrabold text-ink" : "font-semibold text-ink-3"
                       }`}
                     >
                       {cell.text}
@@ -94,10 +111,10 @@ function Shortlist() {
                 </div>
               ))}
             </div>
-          </div>
-          <div className="flex justify-end gap-2.5 mt-4">
-            <Button variant="secondary" size="md" onClick={clearCart}>
-              Clear shortlist
+          </Card>
+          <div className="flex flex-wrap justify-end gap-2.5 mt-5">
+            <Button variant="paper" size="md" onClick={clearCart}>
+              Empty pockets
             </Button>
             <Button
               variant="primary"
@@ -106,7 +123,7 @@ function Shortlist() {
                 if (await applyAll(cartItems.map((c) => c.id))) router.push("/applications");
               }}
             >
-              Apply to all {cartItems.length}
+              Send all {cartItems.length} {cartItems.length === 1 ? "application" : "applications"}
             </Button>
           </div>
         </div>

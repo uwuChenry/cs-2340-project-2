@@ -99,6 +99,7 @@ export type ApplicationBase = {
   stageIndex: number;
   updated: string;
   next: string;
+  hasNews: boolean;
 };
 
 export type SavedSearch = {

@@ -9,6 +9,7 @@ import { useAuth } from "@/state/AuthState";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { FieldError, Label, TextInput } from "@/components/ui/Field";
+import PageHeading from "@/components/ui/PageHeading";
 
 type Role = ApiRegisterBody["role"];
 
@@ -71,8 +72,8 @@ export default function SignupPage() {
     return (
       <div className="max-w-[460px] mx-auto pt-8">
         <Card>
-          <div className="text-[15px] font-semibold mb-1">You&rsquo;re already signed in</div>
-          <p className="m-0 text-[13.5px] text-muted">
+          <div className="font-display text-[19px] font-semibold text-ink mb-1">You&rsquo;re already signed in</div>
+          <p className="m-0 text-[14px] font-bold text-muted">
             Signed in as {user.name}. Sign out first if you want to create a different account, or{" "}
             <Link href={user.role === "recruiter" ? "/recruiter/pipeline" : "/search"}>carry on where you were</Link>.
           </p>
@@ -83,20 +84,19 @@ export default function SignupPage() {
 
   return (
     <div className="max-w-[520px] mx-auto pt-8">
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Account</div>
-      <h1 className="m-0 mb-5 text-[30px] font-semibold tracking-[-0.025em]">Create your account</h1>
+      <PageHeading tag="Move in" title="Create your account" className="mb-5" />
 
       <form onSubmit={submit} noValidate>
         <fieldset className="border-0 p-0 m-0 mb-4">
-          <legend className="p-0 mb-2 text-xs font-medium text-muted">I am…</legend>
+          <legend className="p-0 mb-2 text-[13px] font-extrabold text-area-ink-2">I am…</legend>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {roles.map((r) => {
               const selected = role === r.id;
               return (
                 <label
                   key={r.id}
-                  className={`block cursor-pointer rounded-xl border px-4 py-3.5 ${
-                    selected ? "bg-accent-tint-2 border-accent" : "bg-surface border-line hover:border-line-hover"
+                  className={`block cursor-pointer rounded-[20px] px-4 py-3.5 has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-sun ${
+                    selected ? "bg-sun shadow-[0_4px_0_var(--color-sun-edge)]" : "bg-paper shadow-[0_4px_0_var(--color-edge)]"
                   }`}
                 >
                   <input
@@ -107,10 +107,10 @@ export default function SignupPage() {
                     onChange={() => setRole(r.id)}
                     className="sr-only"
                   />
-                  <span className={`block text-[14.5px] font-semibold mb-0.5 ${selected ? "text-accent-deep" : ""}`}>
+                  <span className={`block font-display text-[16px] font-semibold mb-0.5 ${selected ? "text-sun-ink" : "text-ink"}`}>
                     {r.title}
                   </span>
-                  <span className="block text-[12.5px] leading-[1.45] text-muted">{r.body}</span>
+                  <span className={`block text-[13px] font-semibold leading-[1.45] ${selected ? "text-sun-ink" : "text-muted"}`}>{r.body}</span>
                 </label>
               );
             })}
@@ -183,22 +183,22 @@ export default function SignupPage() {
                 <FieldError messages={errors.confirm} />
               </div>
             </div>
-            <p className="m-0 -mt-2 text-[12px] text-muted-2">At least 8 characters, and not a common or all-numeric password.</p>
+            <p className="m-0 -mt-2 text-[12.5px] font-semibold text-muted-2">At least 8 characters, and not a common or all-numeric password.</p>
 
             {formError && (
-              <p role="alert" className="m-0 text-[13px] text-danger">
+              <p role="alert" className="m-0 text-[13.5px] font-bold text-danger">
                 {formError}
               </p>
             )}
 
-            <Button type="submit" variant="primary" size="md" disabled={submitting} className="w-full !rounded-lg">
+            <Button type="submit" variant="primary" size="md" disabled={submitting} className="w-full">
               {submitting ? "Creating account…" : "Create account"}
             </Button>
           </div>
         </Card>
       </form>
 
-      <p className="mt-4 mb-0 text-[13.5px] text-muted">
+      <p className="mt-5 mb-0 text-[14.5px] font-bold text-area-ink-2">
         Already have an account? <Link href="/login">Sign in</Link>
       </p>
     </div>

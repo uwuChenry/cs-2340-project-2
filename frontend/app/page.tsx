@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import Card from "@/components/ui/Card";
+import { SectionTag } from "@/components/ui/PageHeading";
+import Wood from "@/components/ui/Wood";
+import { PipAvatar } from "@/components/Pip";
+import Reveal from "@/components/Reveal";
 import { skillFilterOptions } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -44,11 +48,11 @@ const seekerSteps = [
     body: "Pick your skills, a salary floor, a commute radius and a work setup. Roster ranks the roles that overlap with your profile instead of the ones that paid to rank.",
   },
   {
-    title: "Shortlist before you commit",
-    body: "Save anything promising to a shortlist, compare it against the map, then apply to the whole batch when you are ready.",
+    title: "Pocket it before you commit",
+    body: "Tuck anything promising into your pockets, compare it side by side and on the map, then send the whole batch when you are ready.",
   },
   {
-    title: "Watch the application move",
+    title: "Watch your mailbox",
     body: "Every application shows its real stage — applied, review, interview, offer — so you always know which conversations are still alive.",
   },
 ];
@@ -63,8 +67,8 @@ const recruiterSteps = [
     body: "Find people by the skills, projects and experience on their profile — not by keyword-stuffed resumes.",
   },
   {
-    title: "Run one clean pipeline",
-    body: "Move applicants through stages, leave notes, and message a shortlist without leaving the board.",
+    title: "Tend one hiring garden",
+    body: "Move applicants through stages, read their notes, and message the people you like without leaving the board.",
   },
 ];
 
@@ -75,7 +79,7 @@ const features = [
   },
   {
     title: "Search on a map",
-    body: "Switch between list, split and map views. Set a radius and see which openings are genuinely within your commute.",
+    body: "Switch between the board, the map, or both. Set a walking distance and see which openings are genuinely close to home.",
   },
   {
     title: "Salary ranges up front",
@@ -98,23 +102,21 @@ const features = [
 const summary = [
   "Search roles by skill, salary, setup and radius",
   "See a skill-match score on every listing",
-  "Shortlist roles, then apply in one pass",
+  "Pocket roles, then apply to them all at once",
   "Track each application through its real stage",
   "Recruiters source candidates and run a pipeline",
   "You choose what your profile reveals",
 ];
 
-const primaryLink =
-  "inline-flex items-center justify-center rounded-lg px-[18px] py-[11px] text-[14.5px] font-medium no-underline hover:no-underline border border-transparent transition-colors duration-150 bg-ink text-ground hover:bg-ink-2";
+const pillLink =
+  "inline-flex items-center justify-center rounded-full px-[22px] py-[11px] font-display text-[16px] font-semibold no-underline hover:no-underline active:translate-y-[3px] active:shadow-none";
 
-const accentLink =
-  "inline-flex items-center justify-center rounded-lg px-[18px] py-[11px] text-[14.5px] font-medium no-underline hover:no-underline border border-transparent transition-colors duration-150 bg-accent text-white hover:bg-accent-deep";
+const primaryLink = `${pillLink} bg-accent text-white hover:text-white shadow-[0_4px_0_var(--color-accent-deep)]`;
 
-const secondaryLink =
-  "inline-flex items-center justify-center rounded-lg px-[18px] py-[11px] text-[14.5px] font-medium no-underline hover:no-underline border border-line-strong transition-colors duration-150 bg-surface text-ink hover:bg-hover-fill";
+const secondaryLink = `${pillLink} bg-paper text-ink-2 hover:text-ink shadow-[0_4px_0_#D9C59A]`;
 
 function Eyebrow({ children }: { children: ReactNode }) {
-  return <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2.5">{children}</div>;
+  return <SectionTag className="mb-3">{children}</SectionTag>;
 }
 
 function StepList({ steps }: { steps: { title: string; body: string }[] }) {
@@ -122,12 +124,12 @@ function StepList({ steps }: { steps: { title: string; body: string }[] }) {
     <ol className="m-0 p-0 list-none flex flex-col gap-5">
       {steps.map((step, i) => (
         <li key={step.title} className="flex gap-3.5">
-          <span className="shrink-0 w-[26px] h-[26px] rounded-lg bg-surface-tint border border-line grid place-items-center font-mono text-[12px] text-ink-3">
+          <span className="shrink-0 w-[32px] h-[32px] rounded-full bg-sun shadow-[0_3px_0_var(--color-sun-edge)] grid place-items-center font-display text-[15px] font-semibold text-sun-ink">
             {i + 1}
           </span>
           <div>
-            <div className="text-[15px] font-semibold tracking-[-0.01em] mb-1">{step.title}</div>
-            <p className="m-0 text-[14px] leading-[1.6] text-muted">{step.body}</p>
+            <div className="font-display text-[17px] font-semibold text-ink mb-1">{step.title}</div>
+            <p className="m-0 text-[14.5px] font-semibold leading-[1.6] text-muted">{step.body}</p>
           </div>
         </li>
       ))}
@@ -142,11 +144,11 @@ export default async function Home() {
     <div className="flex flex-col gap-[72px] pb-4">
       {/* Hero */}
       <section className="pt-6">
-        <Eyebrow>Roster · job marketplace</Eyebrow>
-        <h1 className="m-0 max-w-[760px] text-[38px] sm:text-[46px] leading-[1.08] font-semibold tracking-[-0.03em]">
+        <Eyebrow>Welcome to Roster</Eyebrow>
+        <h1 className="m-0 max-w-[760px] font-display text-[40px] sm:text-[52px] leading-[1.05] font-semibold text-area-ink">
           The job search should start with what you can do.
         </h1>
-        <p className="mt-5 mb-0 max-w-[620px] text-[17px] leading-[1.65] text-muted">
+        <p className="mt-5 mb-0 max-w-[620px] text-[17.5px] font-bold leading-[1.6] text-area-ink-2">
           Roster matches people to openings by skill, salary and distance — then keeps the whole thing in one place, from
           the first search to the offer. No endless tabs, no reposted listings, no guessing where your application went.
         </p>
@@ -161,11 +163,11 @@ export default async function Home() {
         </div>
 
         {stats && (
-          <dl className="m-0 mt-10 pt-7 border-t border-line grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-7">
+          <dl className="m-0 mt-10 grid grid-cols-2 lg:grid-cols-4 gap-4">
             {stats.map((stat) => (
-              <div key={stat.label} className="flex flex-col">
-                <dt className="order-2 mt-2 text-[13px] text-muted-2">{stat.label}</dt>
-                <dd className="order-1 m-0 text-[28px] font-semibold tracking-[-0.03em] leading-none">{stat.value}</dd>
+              <div key={stat.label} className="flex flex-col bg-paper rounded-[22px] px-5 py-4 shadow-[0_5px_0_var(--color-edge)]">
+                <dt className="order-2 mt-1.5 text-[13.5px] font-bold text-muted">{stat.label}</dt>
+                <dd className="order-1 m-0 font-display text-[32px] font-semibold leading-none text-ink">{stat.value}</dd>
               </div>
             ))}
           </dl>
@@ -173,20 +175,20 @@ export default async function Home() {
       </section>
 
       {/* What this is */}
-      <section>
+      <Reveal as="section">
         <Eyebrow>What this is</Eyebrow>
         <div className="flex flex-wrap gap-x-16 gap-y-8">
           <div className="flex-[1_1_420px] min-w-0 max-w-[620px]">
-            <h2 className="m-0 text-[26px] font-semibold tracking-[-0.025em]">
+            <h2 className="m-0 font-display text-[28px] font-semibold text-area-ink">
               A marketplace for work, built for both sides of the table
             </h2>
-            <p className="mt-4 mb-0 text-[15.5px] leading-[1.7] text-ink-3">
+            <p className="mt-4 mb-0 text-[16px] font-semibold leading-[1.7] text-area-ink-2">
               Most job boards are a search engine with a resume upload bolted on. You paste the same history into ten
               different forms, apply into a void, and find out months later that the posting was never real. Roster is a
               different shape: one profile that describes what you have done, one search that understands what a role
               needs, and a record of every application you have sent.
             </p>
-            <p className="mt-4 mb-0 text-[15.5px] leading-[1.7] text-ink-3">
+            <p className="mt-4 mb-0 text-[16px] font-semibold leading-[1.7] text-area-ink-2">
               Recruiters get the same deal in reverse. Post a role with its real requirements and salary range, search
               for people by skill rather than keyword, and move applicants through a pipeline you can actually read.
               Both sides see the same facts, which is the whole point.
@@ -194,79 +196,83 @@ export default async function Home() {
           </div>
 
           <Card className="flex-[1_1_300px] min-w-0 max-w-[400px]">
-            <div className="text-sm font-semibold mb-3.5">In short</div>
+            <div className="flex items-center gap-3 mb-4">
+              <PipAvatar size={48} />
+              <div className="font-display text-[19px] font-semibold text-ink">In short, from Pip</div>
+            </div>
             <ul className="m-0 p-0 list-none flex flex-col gap-3">
               {summary.map((item) => (
-                <li key={item} className="flex gap-2.5 text-[14px] leading-[1.55] text-ink-3">
-                  <span aria-hidden className="mt-[7px] shrink-0 w-1.5 h-1.5 rounded-full bg-accent" />
+                <li key={item} className="flex gap-2.5 text-[14.5px] font-bold leading-[1.55] text-ink-3">
+                  <span aria-hidden className="mt-[6px] shrink-0 w-2.5 h-2.5 rounded-full bg-accent" />
                   {item}
                 </li>
               ))}
             </ul>
           </Card>
         </div>
-      </section>
+      </Reveal>
 
       {/* How it works */}
-      <section>
+      <Reveal as="section">
         <Eyebrow>How it works</Eyebrow>
-        <div className="flex flex-wrap gap-x-16 gap-y-10">
-          <div className="flex-[1_1_360px] min-w-0">
-            <div className="flex items-center justify-between gap-4 mb-5 pb-3.5 border-b border-line">
-              <h2 className="m-0 text-[19px] font-semibold tracking-[-0.02em]">If you are looking for work</h2>
-              <Link href="/search" className="text-[13px] font-medium no-underline hover:no-underline whitespace-nowrap">
-                Start searching →
+        <div className="flex flex-wrap gap-5">
+          <Card className="flex-[1_1_360px] min-w-0 !p-6">
+            <div className="flex items-center justify-between gap-4 mb-5 pb-3.5 border-b-2 border-dashed border-line">
+              <h2 className="m-0 font-display text-[21px] font-semibold text-ink">If you are looking for work</h2>
+              <Link href="/search" className="text-[14px] whitespace-nowrap">
+                To the board →
               </Link>
             </div>
             <StepList steps={seekerSteps} />
-          </div>
+          </Card>
 
-          <div className="flex-[1_1_360px] min-w-0">
-            <div className="flex items-center justify-between gap-4 mb-5 pb-3.5 border-b border-line">
-              <h2 className="m-0 text-[19px] font-semibold tracking-[-0.02em]">If you are hiring</h2>
-              <Link
-                href="/recruiter/post"
-                className="text-[13px] font-medium no-underline hover:no-underline whitespace-nowrap"
-              >
+          <Card className="flex-[1_1_360px] min-w-0 !p-6">
+            <div className="flex items-center justify-between gap-4 mb-5 pb-3.5 border-b-2 border-dashed border-line">
+              <h2 className="m-0 font-display text-[21px] font-semibold text-ink">If you are hiring</h2>
+              <Link href="/recruiter/post" className="text-[14px] whitespace-nowrap">
                 Post a role →
               </Link>
             </div>
             <StepList steps={recruiterSteps} />
-          </div>
+          </Card>
         </div>
-      </section>
+      </Reveal>
 
       {/* Features */}
-      <section>
+      <Reveal as="section">
         <Eyebrow>Why people use it</Eyebrow>
-        <h2 className="m-0 mb-6 text-[26px] font-semibold tracking-[-0.025em]">
+        <h2 className="m-0 mb-6 font-display text-[28px] font-semibold text-area-ink">
           The parts that save you the most time
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((feature) => (
             <Card key={feature.title}>
-              <div className="text-[15px] font-semibold tracking-[-0.01em] mb-2">{feature.title}</div>
-              <p className="m-0 text-[14px] leading-[1.6] text-muted">{feature.body}</p>
+              <div className="font-display text-[18px] font-semibold text-ink mb-2">{feature.title}</div>
+              <p className="m-0 text-[14.5px] font-semibold leading-[1.6] text-muted">{feature.body}</p>
             </Card>
           ))}
         </div>
-      </section>
+      </Reveal>
 
       {/* Closing */}
-      <section className="rounded-xl border border-line bg-surface-sunken px-7 py-10 text-center">
-        <h2 className="m-0 text-[24px] font-semibold tracking-[-0.025em]">{openRoles ? `${openRoles} roles are open right now` : "Roles are open right now"}</h2>
-        <p className="mt-3 mb-0 mx-auto max-w-[480px] text-[15px] leading-[1.65] text-muted">
-          Set your filters once and see which of them match your skills, your range and your commute.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2.5">
-          <Link href="/search" className={accentLink}>
-            Browse open roles
-          </Link>
-          <Link href="/profile" className={secondaryLink}>
-            Set up your profile
-          </Link>
-        </div>
-      </section>
+      <Reveal>
+        <Wood big className="px-7 py-10 text-center">
+          <h2 className="m-0 font-display text-[28px] font-semibold text-paper">
+            {openRoles ? `${openRoles} postings are pinned up right now` : "Postings are pinned up right now"}
+          </h2>
+          <p className="mt-3 mb-0 mx-auto max-w-[480px] text-[16px] font-bold leading-[1.6] text-paper/90">
+            Set your filters once and see which of them match your skills, your range and your walk to work.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link href="/search" className={primaryLink}>
+              Go to the board
+            </Link>
+            <Link href="/profile" className={secondaryLink}>
+              Set up your house
+            </Link>
+          </div>
+        </Wood>
+      </Reveal>
     </div>
   );
 }

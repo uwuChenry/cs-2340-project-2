@@ -1,4 +1,4 @@
-import type { ApplicationBase, Job, PrivacySettings } from "./types";
+import type { Job, PrivacySettings } from "./types";
 import { privacyFieldDefs } from "./constants";
 
 // Skill match, recommendation and distance are computed by the server, because
@@ -40,19 +40,8 @@ export function ringSizePx(radius: number): number {
   return 70 + radius * 3.4;
 }
 
-export type ApplicationView = ApplicationBase & {
-  statusColor: "ink" | "success" | "muted";
-};
-
-export function withStatusColor(applications: ApplicationBase[]): ApplicationView[] {
-  return applications.map((a) => ({
-    ...a,
-    statusColor: a.stageIndex === 3 ? "success" : a.stageIndex === 4 ? "muted" : "ink",
-  }));
-}
-
 export function privacySummary(privacy: PrivacySettings): string {
   const hidden = privacyFieldDefs.filter((f) => !privacy[f.key]).length;
-  if (hidden === 0) return "Your full profile is visible to verified recruiters.";
-  return `${hidden} ${hidden === 1 ? "field is" : "fields are"} hidden until you apply to a role.`;
+  if (hidden === 0) return "Your door is wide open. Verified recruiters see your whole profile.";
+  return `${hidden} ${hidden === 1 ? "thing stays" : "things stay"} private until you apply somewhere.`;
 }

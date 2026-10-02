@@ -13,6 +13,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { FieldError, Label, TextInput } from "@/components/ui/Field";
 import Notice from "@/components/ui/Notice";
+import PageHeading from "@/components/ui/PageHeading";
 
 export default function RecruiterProfilePage() {
   return (
@@ -37,7 +38,7 @@ function RecruiterProfile() {
   const [saving, setSaving] = useState(false);
 
   if (error) return <Notice tone="error">{error}</Notice>;
-  if (!profile) return loading ? <p className="text-[14px] text-muted">Loading your profile…</p> : null;
+  if (!profile) return loading ? <p className="text-[15px] font-bold text-area-ink-2">Opening the front door…</p> : null;
 
   const value = <K extends keyof Fields>(key: K): string => draft[key] ?? profile[key];
   const dirty = Object.keys(draft).length > 0;
@@ -51,7 +52,7 @@ function RecruiterProfile() {
       const updated = await http.patch<ApiRecruiterProfile>("/api/recruiter/profile/", draft);
       setData(() => updated);
       setDraft({});
-      showToast("Profile saved");
+      showToast("All tidied up! Profile saved.");
       // The header shows the name from the session.
       refreshSession().catch(() => {});
     } catch (e) {
@@ -64,16 +65,15 @@ function RecruiterProfile() {
 
   return (
     <div>
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Account</div>
-      <h1 className="m-0 mb-5 text-[30px] font-semibold tracking-[-0.025em]">Your profile</h1>
+      <PageHeading tag="My house" title="Your profile" className="mb-5" />
 
-      <div className="flex flex-wrap gap-[18px] items-start">
+      <div className="flex flex-wrap gap-5 items-start">
         <Card padding="none" className="flex-[3_1_400px] min-w-0 p-[22px]">
           <div className="flex items-center gap-3.5 mb-5">
-            <Avatar initials={profile.initials} size={56} radius="square" />
+            <Avatar initials={profile.initials} size={64} raised />
             <div className="min-w-0">
-              <div className="text-[19px] font-semibold tracking-[-0.015em]">{profile.name}</div>
-              <div className="text-[13.5px] text-muted">
+              <div className="font-display text-[24px] font-semibold text-ink">{profile.name}</div>
+              <div className="text-[14.5px] font-bold text-muted">
                 {[profile.title, profile.company].filter(Boolean).join(" · ")}
               </div>
             </div>
@@ -102,7 +102,7 @@ function RecruiterProfile() {
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 border-t border-line-soft pt-4 mt-5">
+          <div className="flex justify-end gap-2 border-t-2 border-dashed border-line pt-4 mt-5">
             {dirty && (
               <Button variant="secondary" size="md" onClick={() => { setDraft({}); setErrors({}); }} disabled={saving}>
                 Discard
@@ -114,13 +114,13 @@ function RecruiterProfile() {
           </div>
         </Card>
 
-        <div className="flex-[1_1_300px] min-w-0 max-w-[400px] flex flex-col gap-3.5">
+        <div className="flex-[1_1_300px] min-w-0 max-w-[400px] flex flex-col gap-4">
           <Card padding="none" className="p-[18px]">
             <div className="flex items-center gap-2.5 mb-3">
-              <CompanyMark mark={profile.companyMark} bg="#1A1917" size={30} />
+              <CompanyMark mark={profile.companyMark} bg="#8E5F36" size={34} />
               <div className="min-w-0">
-                <div className="text-[15px] font-semibold">{profile.company}</div>
-                <div className="text-xs text-muted-2">Shared by every recruiter at this company</div>
+                <div className="font-display text-[17px] font-semibold text-ink">{profile.company}</div>
+                <div className="text-[12.5px] font-bold text-muted-2">Shared by every recruiter at this company</div>
               </div>
             </div>
             <Label>Company website</Label>
@@ -131,20 +131,20 @@ function RecruiterProfile() {
               placeholder="https://…"
             />
             <FieldError messages={errors.companyWebsite} />
-            <p className="m-0 mt-3 text-[12.5px] leading-[1.5] text-muted-2">
+            <p className="m-0 mt-3 text-[13px] font-semibold leading-[1.5] text-muted-2">
               The company name was set when you signed up and can&rsquo;t be changed here, since it&rsquo;s the same name
               candidates see on every opening.
             </p>
           </Card>
 
           <Card padding="none" className="p-[18px]">
-            <h2 className="m-0 mb-1.5 text-[15px] font-semibold">Next steps</h2>
-            <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[13.5px]">
+            <h2 className="m-0 mb-2 font-display text-[19px] font-semibold text-ink">Next steps</h2>
+            <ul className="m-0 p-0 list-none flex flex-col gap-2 text-[14.5px]">
               <li>
-                <Link href="/recruiter/post">Post your first opening →</Link>
+                <Link href="/recruiter/post">Pin your first posting to the board →</Link>
               </li>
               <li>
-                <Link href="/recruiter/candidates">Search for candidates →</Link>
+                <Link href="/recruiter/candidates">Go scouting for candidates →</Link>
               </li>
             </ul>
           </Card>

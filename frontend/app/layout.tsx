@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Instrument_Sans } from "next/font/google";
+import { Fredoka, Nunito } from "next/font/google";
 import "./globals.css";
 import { AppStateProvider } from "@/state/AppState";
 import { AuthProvider } from "@/state/AuthState";
 import AppShell from "@/components/AppShell";
 
-const instrumentSans = Instrument_Sans({
-  variable: "--font-instrument-sans",
+// Fredoka for headings, buttons, chips and numbers; Nunito for everything else.
+const fredoka = Fredoka({
+  variable: "--font-fredoka",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600"],
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -24,11 +25,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html
-      lang="en"
-      className={`${instrumentSans.variable} ${ibmPlexMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-ground text-ink">
+    <html lang="en" className={`${fredoka.variable} ${nunito.variable} h-full antialiased`}>
+      <body className="min-h-full flex flex-col text-ink-2">
         <AuthProvider>
           <AppStateProvider>
             <AppShell>{children}</AppShell>

@@ -94,7 +94,16 @@ export function toJob(job: ApiJob): Job {
   };
 }
 
-const NEXT_STEP_LABELS = ["Submitted", "In review", "Interview stage", "Offer received", "Role closed"];
+const NEXT_STEP_LABELS = ["On its way", "Being read", "Interview stage", "Offer to review", "Role closed"];
+
+// "News" = a recruiter has touched the application since it was sent, within the
+// last week. It drives the NEW badge in the Mailbox.
+const NEWS_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+
+function hasNews(app: ApiApplication): boolean {
+  const updated = Date.parse(app.updatedAt);
+  return updated - Date.parse(app.appliedAt) > 60_000 && Date.now() - updated < NEWS_WINDOW_MS;
+}
 
 export function toApplication(app: ApiApplication): ApplicationBase {
   return {
@@ -103,8 +112,9 @@ export function toApplication(app: ApiApplication): ApplicationBase {
     company: app.company,
     location: app.location,
     stageIndex: app.stageIndex,
-    updated: `Updated ${timeAgo(app.updatedAt)}`,
+    updated: `Updated ${timeAgo(app.updatedAt).replace("Just now", "just now")}`,
     next: app.nextAction || NEXT_STEP_LABELS[app.stageIndex] || "",
+    hasNews: hasNews(app),
   };
 }
 

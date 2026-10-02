@@ -8,6 +8,7 @@ import { useAuth } from "@/state/AuthState";
 import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { Label, TextInput } from "@/components/ui/Field";
+import PageHeading from "@/components/ui/PageHeading";
 
 export default function LoginPage() {
   const { login, error: sessionError } = useAuth();
@@ -39,14 +40,14 @@ export default function LoginPage() {
 
   return (
     <div className="max-w-[420px] mx-auto pt-8">
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Account</div>
-      <h1 className="m-0 mb-5 text-[30px] font-semibold tracking-[-0.025em]">Sign in to Roster</h1>
+      <PageHeading tag="Welcome back" title="Sign in to Roster" className="mb-5" />
 
       <Card padding="none" className="p-[22px]">
         <form onSubmit={submit} className="grid gap-4">
           <div>
-            <Label>Username</Label>
+            <Label htmlFor="login-username">Username</Label>
             <TextInput
+              id="login-username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
@@ -55,8 +56,9 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <Label>Password</Label>
+            <Label htmlFor="login-password">Password</Label>
             <TextInput
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -66,23 +68,23 @@ export default function LoginPage() {
           </div>
 
           {(error || sessionError) && (
-            <p role="alert" className="m-0 text-[13px] text-danger">
+            <p role="alert" className="m-0 text-[13.5px] font-bold text-danger">
               {error ?? sessionError}
             </p>
           )}
 
-          <Button type="submit" variant="primary" size="md" disabled={submitting} className="w-full !rounded-lg">
+          <Button type="submit" variant="primary" size="md" disabled={submitting} className="w-full">
             {submitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>
       </Card>
 
-      <p className="mt-4 mb-0 text-[13.5px] text-muted">
-        New here? <Link href="/signup">Create an account</Link>
+      <p className="mt-5 mb-0 text-[14.5px] font-bold text-area-ink-2">
+        New in town? <Link href="/signup">Create an account</Link>
       </p>
 
       {process.env.NODE_ENV !== "production" && (
-        <p className="mt-4 mb-0 text-[12.5px] leading-[1.6] text-muted-2">
+        <p className="mt-4 mb-0 text-[13px] font-semibold leading-[1.6] text-area-ink-2">
           Demo accounts from <code>manage.py seed_demo</code>: <strong>maya</strong> (job seeker) and{" "}
           <strong>rhodes</strong> (recruiter), both with password <code>demo12345</code>.
         </p>

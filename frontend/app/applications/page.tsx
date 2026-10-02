@@ -1,21 +1,17 @@
 "use client";
 
+import Link from "next/link";
+import { motion } from "motion/react";
 import { http } from "@/lib/api";
 import type { ApiApplication } from "@/lib/apiTypes";
 import { toApplication } from "@/lib/adapters";
-import { withStatusColor } from "@/lib/derive";
 import { STAGES } from "@/lib/types";
+import { list, listItem } from "@/lib/motion";
 import { useAsync } from "@/lib/useAsync";
 import Guard from "@/components/Guard";
-import Card from "@/components/ui/Card";
 import Notice from "@/components/ui/Notice";
-import ProgressRail from "@/components/ui/ProgressRail";
-
-const statusColorClass: Record<string, string> = {
-  ink: "text-ink",
-  success: "text-success",
-  muted: "text-muted-2",
-};
+import PageHeading from "@/components/ui/PageHeading";
+import { StageCount, StageProgress, StageStamp } from "@/components/ui/Stage";
 
 export default function ApplicationsPage() {
   return (
@@ -28,54 +24,80 @@ export default function ApplicationsPage() {
 function Applications() {
   const { data, error, loading } = useAsync(() => http.get<ApiApplication[]>("/api/applications/"), []);
 
-  const applications = withStatusColor((data ?? []).map(toApplication));
+  const applications = (data ?? []).map(toApplication);
+  const withNews = applications.filter((a) => a.hasNews).length;
   const stageCounts = STAGES.map((label, i) => ({
     label,
     count: applications.filter((a) => a.stageIndex === i).length,
   }));
 
+  const summary = data
+    ? `${applications.length} ${applications.length === 1 ? "letter" : "letters"} sent${withNews ? ` · ${withNews} with news` : ""}`
+    : undefined;
+
   return (
-    <div>
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Tracker</div>
-      <h1 className="m-0 mb-[22px] text-[30px] font-semibold tracking-[-0.025em]">Your applications</h1>
+    <div className="max-w-[900px]">
+      <PageHeading tag="Mailbox" title="Your applications" sub={summary} className="mb-5" />
 
       {error && <Notice tone="error">{error}</Notice>}
-      {loading && !data && <p className="text-[14px] text-muted">Loading your applications…</p>}
+      {loading && !data && <p className="text-[15px] font-bold text-area-ink-2">Checking the mailbox…</p>}
 
       {data && (
         <>
-          <div className="grid gap-2.5 mb-[22px]" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))" }}>
-            {stageCounts.map((s) => (
-              <Card key={s.label} padding="none" className="px-[14px] py-[13px]">
-                <div className="text-2xl font-semibold tracking-[-0.02em]">{s.count}</div>
-                <div className="text-[12.5px] text-muted mt-0.5">{s.label}</div>
-              </Card>
+          <motion.div variants={list} initial="hidden" animate="shown" className="flex flex-wrap gap-2.5 mb-[22px]">
+            {stageCounts.map((s, i) => (
+              <motion.div
+                key={s.label}
+                variants={listItem}
+                className="flex items-center gap-[9px] bg-paper rounded-full py-[7px] pl-[7px] pr-3.5 shadow-[0_4px_0_var(--color-edge)]"
+              >
+                <StageCount stageIndex={i} count={s.count} />
+                <span className="font-display text-[14.5px] font-semibold text-ink-2">{s.label}</span>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
 
           {applications.length === 0 ? (
-            <Notice>You haven&rsquo;t applied to anything yet. Find a role on the Search tab and apply in one click.</Notice>
+            <Notice>
+              Nothing in the mailbox yet. Find something on <Link href="/search">the Board</Link> and apply in one click.
+            </Notice>
           ) : (
-            <div className="bg-surface border border-line rounded-xl overflow-hidden">
-              {applications.map((a) => (
-                <div
+            // Letters slide into the mailbox one after another; each stamp lands
+            // just after its letter does.
+            <motion.div variants={list} initial="hidden" animate="shown" className="flex flex-col gap-3.5">
+              {applications.map((a, i) => (
+                <motion.div
                   key={a.id}
-                  className="px-[18px] py-4 border-b border-line-soft last:border-b-0 flex flex-wrap gap-x-5 gap-y-3.5 items-center"
+                  variants={listItem}
+                  className="bg-paper rounded-[22px] px-[18px] py-4 shadow-[0_5px_0_#D9C59A] flex flex-wrap gap-4 items-center"
                 >
-                  <div className="flex-[1_1_200px] min-w-0">
-                    <div className="text-[15px] font-semibold tracking-[-0.01em]">{a.title}</div>
-                    <div className="text-[13px] text-muted mt-[3px]">
-                      {a.company} · {a.location}
+                  <StageStamp stageIndex={a.stageIndex} delay={0.15 + i * 0.05} />
+                  <div className="flex-[1_1_260px] min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <span className="font-display text-[19px] font-semibold text-ink">{a.company}</span>
+                      {a.hasNews && (
+                        <motion.span
+                          initial={{ scale: 0, rotate: -20 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ type: "spring", stiffness: 500, damping: 14, delay: 0.4 + i * 0.05 }}
+                          className="text-[11px] font-extrabold bg-danger text-white px-2 py-0.5 rounded-full"
+                        >
+                          NEW
+                        </motion.span>
+                      )}
                     </div>
+                    <div className="text-[14px] font-bold text-muted mb-2.5">
+                      {a.title} · {a.location}
+                    </div>
+                    <StageProgress stageIndex={a.stageIndex} delay={i * 0.05} />
                   </div>
-                  <ProgressRail stageIndex={a.stageIndex} />
                   <div className="flex-[0_1_auto] ml-auto text-right">
-                    <div className="text-[12.5px] text-muted-2">{a.updated}</div>
-                    <div className={`text-[13px] font-medium mt-[3px] ${statusColorClass[a.statusColor]}`}>{a.next}</div>
+                    <div className="text-[13px] font-bold text-muted-2">{a.updated}</div>
+                    <div className="font-display text-[15px] font-semibold text-ink mt-0.5">{a.next}</div>
                   </div>
-                </div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </>
       )}

@@ -12,6 +12,7 @@ import Button from "@/components/ui/Button";
 import Card from "@/components/ui/Card";
 import { FieldError, Label, TextInput } from "@/components/ui/Field";
 import Notice from "@/components/ui/Notice";
+import PageHeading from "@/components/ui/PageHeading";
 
 export default function AccountPage() {
   return (
@@ -35,7 +36,7 @@ function Account() {
   const [savingPassword, setSavingPassword] = useState(false);
 
   if (error) return <Notice tone="error">{error}</Notice>;
-  if (!account) return loading ? <p className="text-[14px] text-muted">Loading your account…</p> : null;
+  if (!account) return loading ? <p className="text-[15px] font-bold text-area-ink-2">Finding your keys…</p> : null;
 
   const value = (key: keyof ApiAccount) => draft[key] ?? account[key];
   const dirty = Object.keys(draft).length > 0;
@@ -49,7 +50,7 @@ function Account() {
       const updated = await http.patch<ApiAccount>("/api/auth/account/", draft);
       setData(() => updated);
       setDraft({});
-      showToast("Account updated");
+      showToast("Account updated!");
       refresh().catch(() => {});
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length) setAccountErrors(err.fieldErrors);
@@ -70,7 +71,7 @@ function Account() {
     try {
       await http.post("/api/auth/password/", { currentPassword: passwords.current, newPassword: passwords.next });
       setPasswords({ current: "", next: "", confirm: "" });
-      showToast("Password changed");
+      showToast("New key cut. Password changed!");
     } catch (err) {
       if (err instanceof ApiError && Object.keys(err.fieldErrors).length) setPasswordErrors(err.fieldErrors);
       else showToast(messageOf(err));
@@ -81,15 +82,20 @@ function Account() {
 
   return (
     <div className="max-w-[640px]">
-      <div className="font-mono text-[11px] tracking-[0.1em] uppercase text-muted-2 mb-2">Account</div>
-      <h1 className="m-0 mb-1.5 text-[30px] font-semibold tracking-[-0.025em]">Account settings</h1>
-      <p className="m-0 mb-[22px] text-[14px] text-muted">
-        How you sign in. Your public details live on your <Link href={profileHref}>profile</Link>.
-      </p>
+      <PageHeading
+        tag="Keys and locks"
+        title="Account settings"
+        sub={
+          <>
+            How you sign in. Your public details live on your <Link href={profileHref}>profile</Link>.
+          </>
+        }
+        className="mb-[22px]"
+      />
 
-      <div className="flex flex-col gap-3.5">
+      <div className="flex flex-col gap-4">
         <Card padding="none" className="p-[22px]">
-          <h2 className="m-0 mb-3.5 text-[15px] font-semibold">Sign-in details</h2>
+          <h2 className="m-0 mb-3.5 font-display text-[19px] font-semibold text-ink">Sign-in details</h2>
           <form onSubmit={saveAccount} className="grid gap-4" noValidate>
             <div>
               <Label>Username</Label>
@@ -110,7 +116,7 @@ function Account() {
               />
               <FieldError messages={accountErrors.email} />
             </div>
-            <div className="flex justify-end gap-2 border-t border-line-soft pt-4">
+            <div className="flex justify-end gap-2 border-t-2 border-dashed border-line pt-4">
               {dirty && (
                 <Button
                   type="button"
@@ -133,7 +139,7 @@ function Account() {
         </Card>
 
         <Card padding="none" className="p-[22px]">
-          <h2 className="m-0 mb-3.5 text-[15px] font-semibold">Change password</h2>
+          <h2 className="m-0 mb-3.5 font-display text-[19px] font-semibold text-ink">Change password</h2>
           <form onSubmit={changePassword} className="grid gap-4" noValidate>
             <div>
               <Label>Current password</Label>
@@ -167,10 +173,10 @@ function Account() {
                 <FieldError messages={passwordErrors.confirm} />
               </div>
             </div>
-            <p className="m-0 -mt-2 text-[12px] text-muted-2">
+            <p className="m-0 -mt-2 text-[12.5px] font-semibold text-muted-2">
               At least 8 characters, and not a common or all-numeric password. You&rsquo;ll stay signed in on this device.
             </p>
-            <div className="flex justify-end border-t border-line-soft pt-4">
+            <div className="flex justify-end border-t-2 border-dashed border-line pt-4">
               <Button
                 type="submit"
                 variant="primary"

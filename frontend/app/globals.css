@@ -1,54 +1,89 @@
 @import "tailwindcss";
 
+/* Cozy life-sim theme. See design_handoff_job_marketplace_cozy/README.md for the
+   source of every value here. The older token names (surface, ink, accent, line…)
+   are kept and pointed at the new palette, so a class like `text-muted` still
+   means "the label colour", it just reads warm brown now. */
 @theme {
-  --font-sans: var(--font-instrument-sans), "Instrument Sans", system-ui, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --font-sans: var(--font-nunito), "Nunito", system-ui, sans-serif;
+  --font-display: var(--font-fredoka), "Fredoka", system-ui, sans-serif;
 
-  --color-ground: #FAF9F6;
-  --color-surface: #FFFFFF;
-  --color-surface-sunken: #FCFBF9;
-  --color-surface-muted: #F6F5F1;
-  --color-surface-tint: #F4F2EC;
+  /* Surfaces */
+  --color-paper: #FFF8E1;
+  --color-tan: #EFE3C2;
+  --color-ground: #BDE6A0;
+  --color-surface: #FFF8E1;
+  --color-surface-sunken: #FFFFFF;
+  --color-surface-muted: #FFFFFF;
+  --color-surface-tint: #EFE3C2;
 
-  --color-ink: #1A1917;
-  --color-ink-2: #3D3A34;
-  --color-ink-3: #4F4C45;
-  --color-muted: #6E6B63;
-  --color-muted-2: #8A867C;
-  --color-muted-3: #A3A096;
+  /* Ink */
+  --color-ink: #3A2A1C;
+  --color-ink-2: #4A3726;
+  --color-ink-3: #5B4636;
+  --color-muted: #6B5540;
+  --color-muted-2: #8A6E52;
+  --color-muted-3: #A38D72;
 
-  --color-line: #E6E3DC;
-  --color-line-soft: #F0EEE8;
-  --color-line-strong: #DDD9D1;
-  --color-line-hover: #C9C4B8;
-  --color-line-tag: #E9E6DE;
-  --color-hover-fill: #EFEDE7;
+  /* Lines and the "drop edge" under neutral surfaces. Sky areas swap the edge
+     for blue (see [data-area="sky"] below). */
+  --color-line: #E6D6AE;
+  --color-line-soft: #F0E5C8;
+  --color-line-strong: #D9C59A;
+  --color-line-hover: #C9B07A;
+  --color-line-tag: #EADBB6;
+  --color-hover-fill: #EFE3C2;
+  --color-edge: #D9C59A;
 
-  --color-accent: #1B4DFF;
-  --color-accent-deep: #1F2E8C;
-  --color-accent-text: #4A5490;
-  --color-accent-tint: #ECEFFB;
-  --color-accent-tint-2: #F2F3FC;
-  --color-accent-tint-3: #E3E6F7;
-  --color-accent-border: #C6CCEC;
-  --color-accent-border-2: #DCE0F6;
-  --color-accent-border-3: #D3D8F0;
+  /* Primary green (apply, send, confirm) */
+  --color-accent: #3F8F24;
+  --color-accent-deep: #2E6B18;
+  --color-accent-text: #1F4F0F;
+  --color-accent-tint: #D9F0C6;
+  --color-accent-tint-2: #EEF8E4;
+  --color-accent-tint-3: #D9F0C6;
+  --color-accent-border: #B5DB97;
+  --color-accent-border-2: #CBE7B3;
+  --color-accent-border-3: #B5DB97;
 
-  --color-success: #1F5A41;
-  --color-success-bg: #EEF6F1;
-  --color-success-border: #CFE6DA;
+  /* Selected yellow (active tab, active chip, active filter) */
+  --color-sun: #F9D65C;
+  --color-sun-edge: #D9A92C;
+  --color-sun-ink: #5B3B00;
 
-  --color-danger: #A32A1F;
-  --color-danger-bg: #FBF0EE;
-  --color-danger-border: #EBCFCB;
+  --color-success: #1F4F0F;
+  --color-success-bg: #D9F0C6;
+  --color-success-border: #B5DB97;
 
-  --color-tag-fill: #F3F1EB;
-  --color-scrim: rgba(26, 25, 23, 0.32);
+  --color-danger: #C23B38;
+  --color-danger-bg: #FDEBE3;
+  --color-danger-border: #F2C4B5;
 
-  --color-map-ground: #EFEEE8;
-  --color-map-grid: #E4E2DA;
-  --color-map-road: #E2E0D7;
-  --color-map-water: #DEE6EC;
+  --color-link: #2F6DB5;
+  --color-link-hover: #1F4A80;
+  --color-rust: #C8552A;
+  --color-peach: #FFD7A8;
+  --color-peach-ink: #8A4B1C;
+
+  /* Wooden job board and pipeline planters */
+  --color-wood: #8E5F36;
+  --color-wood-inner: #744B28;
+  --color-wood-edge: #5E3C1F;
+
+  --color-tag-fill: #EFE3C2;
+  --color-scrim: rgba(40, 25, 10, 0.38);
+
+  /* Island map */
+  --color-map-water: #7CC8EC;
+  --color-map-water-dot: #9AD6F1;
+  --color-map-beach: #F6E3B4;
+  --color-map-land: #A6DB82;
+  --color-map-land-dot: #95CF6F;
+
+  /* Headings and body copy that sit directly on the page background. Sky
+     areas use blue ink instead. */
+  --color-area-ink: #3A2A1C;
+  --color-area-ink-2: #5B4636;
 }
 
 * {
@@ -58,12 +93,41 @@
 html,
 body {
   background: var(--color-ground);
-  color: var(--color-ink);
+  color: var(--color-ink-2);
 }
 
 body {
   -webkit-font-smoothing: antialiased;
   font-family: var(--font-sans);
+  /* Nunito reads too thin on cream at 400. */
+  font-weight: 600;
+}
+
+/* Each area of the app has its own ground: a solid colour plus a dot pattern.
+   AppShell sets data-area from the current route. */
+.area {
+  background-color: var(--area-bg);
+  background-image: radial-gradient(var(--area-dot) 2px, transparent 2.5px);
+  background-size: 22px 22px;
+}
+[data-area="grass"] {
+  --area-bg: #BDE6A0;
+  --area-dot: #A9DA87;
+}
+[data-area="sand"] {
+  --area-bg: #F6E3B4;
+  --area-dot: #EDD49A;
+}
+[data-area="sky"] {
+  --area-bg: #9ED8F2;
+  --area-dot: #B4E2F6;
+  --color-edge: #8CC4DE;
+  --color-area-ink: #173A52;
+  --color-area-ink-2: #1F4A66;
+}
+[data-area="wood"] {
+  --area-bg: #F3D9B8;
+  --area-dot: #EACAA0;
 }
 
 /* These live in the base layer so Tailwind utilities can override them. Unlayered
@@ -71,11 +135,12 @@ body {
    and `text-muted` on nav links lose to `color: inherit` / the link colour. */
 @layer base {
   a {
-    color: var(--color-accent);
+    color: var(--color-link);
+    font-weight: 700;
     text-decoration: none;
   }
   a:hover {
-    color: var(--color-accent-deep);
+    color: var(--color-link-hover);
     text-decoration: underline;
   }
 
@@ -85,6 +150,63 @@ body {
   button {
     font: inherit;
     color: inherit;
+  }
+
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  button:focus-visible,
+  a:focus-visible {
+    outline: 3px solid var(--color-sun);
+    outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+  }
+}
+
+@layer components {
+  /* A paper card pinned to the job board: slightly tilted, straightens and lifts
+     on hover. The tilt comes from --tilt on the element. */
+  .pinned {
+    rotate: var(--tilt, 0deg);
+    transition: rotate 150ms ease, translate 150ms ease;
+  }
+  .pinned:hover {
+    rotate: 0deg;
+    translate: 0 -3px;
+  }
+
+  /* Lined paper for the application note. */
+  .ruled {
+    background-color: #FFFDF6;
+    background-image: repeating-linear-gradient(transparent, transparent 25px, #F0E5C8 25px, #F0E5C8 27px);
+    background-position: 0 10px;
+  }
+
+  .island-water {
+    background-color: var(--color-map-water);
+    background-image: radial-gradient(var(--color-map-water-dot) 2px, transparent 2.5px);
+    background-size: 20px 20px;
+  }
+  .island-land {
+    background-color: var(--color-map-land);
+    background-image: radial-gradient(var(--color-map-land-dot) 2px, transparent 2.5px);
+    background-size: 18px 18px;
+  }
+}
+
+/* The tilt and hover lift are decoration; drop them for people who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .pinned,
+  .pinned:hover {
+    rotate: none;
+    translate: none;
+    transition: none;
   }
 }
 

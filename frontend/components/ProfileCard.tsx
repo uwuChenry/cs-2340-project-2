@@ -10,7 +10,7 @@ export function EditButton({ onClick, label = "Edit", pressed }: { onClick: () =
       type="button"
       onClick={onClick}
       aria-pressed={pressed}
-      className="shrink-0 inline-flex items-center gap-1.5 rounded-md border border-line-strong bg-surface px-2.5 py-1 text-[12.5px] font-medium text-ink-3 cursor-pointer hover:bg-hover-fill hover:text-ink"
+      className="shrink-0 inline-flex items-center gap-1.5 rounded-full border-0 bg-tan px-3 py-1 font-display text-[13px] font-semibold text-ink-3 shadow-[0_3px_0_#D9C59A] cursor-pointer hover:text-ink active:translate-y-[3px] active:shadow-none"
     >
       {label}
     </button>
@@ -39,10 +39,10 @@ export default function ProfileCard({
   const corner = editing ? action : <EditButton onClick={onEdit} />;
 
   return (
-    <Card padding="none" className={`relative p-[22px] ${editing ? "border-accent-border" : ""}`}>
+    <Card padding="none" className={`relative p-[22px] ${editing ? "outline-3 outline-sun" : ""}`}>
       {title ? (
         <div className="flex items-center justify-between gap-3 mb-3.5">
-          <h2 className="m-0 text-[15px] font-semibold">{title}</h2>
+          <h2 className="m-0 font-display text-[19px] font-semibold text-ink">{title}</h2>
           {corner}
         </div>
       ) : (

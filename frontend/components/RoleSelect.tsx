@@ -20,7 +20,7 @@ export default function RoleSelect({
       aria-label="Opening"
       value={selectedId ?? ""}
       onChange={(e) => onChange(e.target.value)}
-      className="!w-auto min-w-[220px] !text-[13.5px]"
+      className="!w-auto min-w-[220px] !bg-paper !border-0 shadow-[0_4px_0_var(--color-edge)] font-display !font-semibold"
     >
       {jobs.map((j) => (
         <option key={j.id} value={j.id}>

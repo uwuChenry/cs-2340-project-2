@@ -82,7 +82,7 @@ Optional env vars: `NEXT_PUBLIC_API_URL` (browser → API origin), `API_URL` (se
 | 4 | Track status Applied → Review → Interview → Offer → Closed | ✅ | `/applications`; `GET /api/applications/` | Read-only for the seeker; no notification when a recruiter moves you. |
 | 5 | Privacy options on profile | ✅ | `/profile` side panel; enforced in the recruiter serializers | 4 toggles: show full name (else initials), show contact, show current employer, open to work. Photo is never sent to recruiters. Server-side, not just hidden in the UI. |
 | 6 | Job recommendations from skills | ✅ | Match % badge + "Recommended" banner on `/search` | ≥ 75% skill overlap = recommended, sorted first. No separate "for you" feed or email. |
-| 7 | Jobs on an interactive map | 🟡 | `SchematicMap.tsx` | **Placeholder**: a static grid, pins positioned from real coordinates. Not a real map library. |
+| 7 | Jobs on an interactive map | 🟡 | `SchematicMap.tsx` | **Placeholder**: a static island illustration, pins positioned from real coordinates. Not a real map library. |
 | 8 | Filter by distance from my current location | 🟡 | Profile → "Use my current location"; `radius` on `GET /api/jobs/` | Location is captured once via browser geolocation and stored; it isn't live on the search page. |
 | 9 | Preferred commute radius | ✅ | Radius slider (5–60 mi) on `/search` | Filters the list. The ring on the map is decorative, not to scale. Jobs with no known distance stay in the list. |
 | 10 | "Shopping cart" to collect and compare | ✅ | `/shortlist` (called **Shortlist**); `/api/shortlist/…` | Persisted server-side, compare table, apply to all, clear. (Unrelated to the legacy `cart` app.) |

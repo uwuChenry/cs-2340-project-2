@@ -1,8 +1,10 @@
 "use client";
 
 import { type KeyboardEvent, useRef, useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { ApiError, http, messageOf } from "@/lib/api";
 import type { ApiProfile } from "@/lib/apiTypes";
+import { springBouncy } from "@/lib/motion";
 import { useAppState } from "@/state/AppState";
 import ProfileCard from "./ProfileCard";
 import { Avatar } from "./ui/Avatar";
@@ -75,7 +77,7 @@ export function HeaderBlock({
     setSaving(true);
     setErrors({});
     const nameChanged = "firstName" in draft || "lastName" in draft;
-    const result = await save(draft, "Profile saved");
+    const result = await save(draft, "All tidied up! Profile saved.");
     setSaving(false);
     if (!result.ok) {
       setErrors(result.errors);
@@ -136,7 +138,7 @@ export function HeaderBlock({
       async (position) => {
         await save(
           { latitude: position.coords.latitude.toFixed(6), longitude: position.coords.longitude.toFixed(6) },
-          "Location pinned — job distances are measured from here",
+          "Home is pinned! I'll measure walking distances from here.",
         );
         setLocating(false);
       },
@@ -158,15 +160,15 @@ export function HeaderBlock({
 
     return (
       <ProfileCard editing={false} onEdit={startEditing}>
-        <div className="flex gap-5 items-start pr-16">
-          <Avatar initials={profile.initials} src={profile.photoUrl} size={88} radius="square" />
+        <div className="flex gap-[18px] items-start pr-16">
+          <Avatar initials={profile.initials} src={profile.photoUrl} size={84} raised />
           <div className="min-w-0">
-            <h1 className="m-0 mb-1 text-[26px] font-semibold tracking-[-0.02em]">{profile.name}</h1>
-            <p className={`m-0 mb-2.5 text-[15px] leading-[1.45] ${profile.headline ? "text-ink-3" : "text-muted-2"}`}>
+            <h1 className="m-0 mb-1 font-display text-[28px] font-semibold text-ink">{profile.name}</h1>
+            <p className={`m-0 mb-2.5 text-[15.5px] font-bold leading-[1.45] ${profile.headline ? "text-ink-3" : "text-muted-2"}`}>
               {profile.headline || "Add a headline so recruiters know what you do."}
             </p>
             {facts.length > 0 && (
-              <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-muted">
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[14px] font-bold text-muted">
                 {facts.map((fact) => (
                   <span key={fact}>{fact}</span>
                 ))}
@@ -182,7 +184,7 @@ export function HeaderBlock({
     <ProfileCard editing onEdit={startEditing}>
       <div>
         <div className="flex items-center gap-4 mb-5">
-          <Avatar initials={profile.initials} src={profile.photoUrl} size={88} radius="square" />
+          <Avatar initials={profile.initials} src={profile.photoUrl} size={84} raised />
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <input
@@ -197,18 +199,14 @@ export function HeaderBlock({
                 {photoBusy ? "Working…" : profile.photoUrl ? "Change photo" : "Upload photo"}
               </Button>
               {profile.photoUrl && (
-                <button
-                  onClick={removePhoto}
-                  disabled={photoBusy}
-                  className="border-0 bg-transparent p-0 text-[12.5px] text-muted underline cursor-pointer hover:text-danger disabled:opacity-50"
-                >
+                <Button variant="link" onClick={removePhoto} disabled={photoBusy} className="hover:!text-danger">
                   Remove
-                </button>
+                </Button>
               )}
             </div>
-            <p className="m-0 mt-1.5 text-[12px] text-muted-2">JPEG, PNG or WebP, up to 5 MB. It&rsquo;s cropped to a square.</p>
+            <p className="m-0 mt-1.5 text-[12.5px] font-bold text-muted-2">JPEG, PNG or WebP, up to 5 MB. It&rsquo;s cropped to a circle.</p>
             {photoError && (
-              <p role="alert" className="m-0 mt-1.5 text-[12.5px] text-danger">
+              <p role="alert" className="m-0 mt-1.5 text-[12.5px] font-bold text-danger">
                 {photoError}
               </p>
             )}
@@ -246,17 +244,14 @@ export function HeaderBlock({
             </Button>
             {pinned && (
               <>
-                <span className="text-[12.5px] text-success">Pinned ✓</span>
-                <button
-                  onClick={() => save({ latitude: null, longitude: null }, "Pinned location cleared")}
-                  className="border-0 bg-transparent p-0 text-[12.5px] text-muted underline cursor-pointer hover:text-ink"
-                >
+                <span className="text-[13px] font-extrabold text-success">Pinned ✓</span>
+                <Button variant="link" onClick={() => save({ latitude: null, longitude: null }, "Pin pulled up. Distances are off for now.")}>
                   Clear
-                </button>
+                </Button>
               </>
             )}
           </div>
-          <p className="m-0 mt-1.5 text-[12px] leading-[1.5] text-muted-2">
+          <p className="m-0 mt-1.5 text-[12.5px] font-semibold leading-[1.5] text-muted-2">
             Pinning your location lets Roster show how far each role is and filter by commute radius. It&rsquo;s only used to
             measure distance. Recruiters only ever get an approximate area (about a mile), never your exact spot.
           </p>
@@ -276,13 +271,13 @@ export function HeaderBlock({
         className="mt-3.5 w-full flex items-center justify-between gap-3 border-0 bg-transparent py-2 cursor-pointer text-left"
       >
         <span>
-          <span className="block text-[13.5px]">Open to remote roles</span>
-          <span className="block text-xs text-muted-2 mt-0.5">Include remote postings in your recommendations</span>
+          <span className="block text-[14.5px] font-extrabold">Open to remote roles</span>
+          <span className="block text-[12.5px] font-semibold text-muted-2 mt-0.5">Include remote postings in your recommendations</span>
         </span>
         <Toggle on={openToRemote} />
       </button>
 
-      <div className="flex justify-end gap-2 border-t border-line-soft pt-4 mt-2">
+      <div className="flex justify-end gap-2 border-t-2 border-dashed border-line pt-4 mt-2">
         <Button variant="secondary" size="md" onClick={() => setEditing(false)} disabled={saving}>
           Cancel
         </Button>
@@ -338,9 +333,9 @@ export function AboutBlock({ profile, save }: BlockProps) {
           </div>
         </>
       ) : profile.about ? (
-        <p className="m-0 text-[14px] leading-[1.65] text-ink-3 whitespace-pre-line">{profile.about}</p>
+        <p className="m-0 text-[15px] font-semibold leading-[1.6] text-ink-3 whitespace-pre-line">{profile.about}</p>
       ) : (
-        <p className="m-0 text-[13.5px] text-muted">Tell recruiters what you do best and what you want next.</p>
+        <p className="m-0 text-[14px] font-bold text-muted">Tell recruiters what you do best and what you want next.</p>
       )}
     </ProfileCard>
   );
@@ -398,15 +393,22 @@ export function SkillsBlock({ profile, save }: BlockProps) {
       }
     >
       {profile.skills.length === 0 && !editing && (
-        <p className="m-0 text-[13.5px] text-muted">Skills drive your match score on every role.</p>
+        <p className="m-0 mb-3 text-[14px] font-bold text-muted">Skills drive your match score on every posting.</p>
       )}
 
-      <div className="flex flex-wrap gap-1.5">
+      {/* Chips pop in when added and shrink away when removed; the rest shuffle over. */}
+      <div className="flex flex-wrap gap-2">
+        <AnimatePresence initial={false} mode="popLayout">
         {profile.skills.map((skill) => (
-          <span
+          <motion.span
             key={skill}
-            className={`inline-flex items-center gap-1.5 text-[13px] text-ink-3 bg-tag-fill border border-line-tag rounded-md py-[5px] ${
-              editing ? "pl-2.5 pr-1.5" : "px-2.5"
+            layout
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5 }}
+            transition={springBouncy}
+            className={`inline-flex items-center gap-1.5 font-display text-[14px] font-semibold text-accent-deep bg-success-bg rounded-full py-[5px] shadow-[0_3px_0_var(--color-success-border)] ${
+              editing ? "pl-[13px] pr-2" : "px-[13px]"
             }`}
           >
             {skill}
@@ -415,13 +417,24 @@ export function SkillsBlock({ profile, save }: BlockProps) {
                 onClick={() => change(profile.skills.filter((s) => s !== skill))}
                 disabled={busy}
                 aria-label={`Remove ${skill}`}
-                className="border-0 bg-transparent p-0 leading-none text-muted-2 cursor-pointer hover:text-ink disabled:opacity-50"
+                className="border-0 bg-transparent p-0 leading-none text-accent-deep/70 cursor-pointer hover:text-ink disabled:opacity-50"
               >
                 ×
               </button>
             )}
-          </span>
+          </motion.span>
         ))}
+        </AnimatePresence>
+        {!editing && (
+          <motion.button
+            layout
+            transition={springBouncy}
+            onClick={() => setEditing(true)}
+            className="font-display text-[14px] font-semibold text-muted bg-white border-2 border-dashed border-line-strong rounded-full px-[13px] py-1 cursor-pointer hover:text-ink"
+          >
+            + Add skill
+          </motion.button>
+        )}
       </div>
 
       {editing && (
@@ -440,7 +453,7 @@ export function SkillsBlock({ profile, save }: BlockProps) {
             </Button>
           </div>
           {problem && (
-            <p role="alert" className="m-0 mt-1.5 text-[12.5px] text-danger">
+            <p role="alert" className="m-0 mt-1.5 text-[12.5px] font-bold text-danger">
               {problem}
             </p>
           )}
